@@ -14,7 +14,10 @@
 
 namespace bf
 {
-    constexpr double pi() { return std::atan(1.0)*4.0; }
+    constexpr double pi()
+    {
+        return std::atan(1.0) * 4.0;
+    }
 
     inline bool equals(double a, double b, double eps)
     {

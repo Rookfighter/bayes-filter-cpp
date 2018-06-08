@@ -73,7 +73,8 @@ namespace bf
         const Eigen::VectorXd &state,
         const Eigen::MatrixXd &observations) const
     {
-        Eigen::MatrixXd estObs = sensorModel().estimateObservations(state, observations).val;
+        Eigen::MatrixXd estObs = sensorModel().estimateObservations(state,
+                                 observations).val;
         return mat2vec(estObs);
     }
 
@@ -106,8 +107,8 @@ namespace bf
         result.cov += obsCov;
         for(unsigned int i = 0; i < result.cov.cols(); ++ i)
         {
-            if(iszero(result.cov(i,i), 1e-12))
-                result.cov(i,i) = 1;
+            if(iszero(result.cov(i, i), 1e-12))
+                result.cov(i, i) = 1;
         }
 
         // calculate kalman gain

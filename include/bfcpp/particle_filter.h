@@ -26,7 +26,7 @@ namespace bf
         std::default_random_engine rndgen_;
 
         Eigen::VectorXd randomizeState(const Eigen::VectorXd &state,
-            const Eigen::MatrixXd &cov);
+                                       const Eigen::MatrixXd &cov);
         void normalizeWeight();
         double effectiveParticles() const;
         void resample();
