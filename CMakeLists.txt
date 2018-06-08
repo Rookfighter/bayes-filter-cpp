@@ -23,3 +23,8 @@ include_directories(
 file(GLOB SRC src/bfcpp/*.cpp)
 
 add_library(${BFCPP_LIBRARY} ${SRC})
+
+install(TARGETS ${BFCPP_LIBRARY}
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+install(DIRECTORY include/bfcpp DESTINATION include)
