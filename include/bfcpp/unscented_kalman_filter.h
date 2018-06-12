@@ -28,6 +28,7 @@ namespace bf
                                       const Eigen::MatrixXd &observations) const;
 
     public:
+        UnscentedKalmanFilter();
         UnscentedKalmanFilter(MotionModel *mm, SensorModel *sm);
         ~UnscentedKalmanFilter();
 

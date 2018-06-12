@@ -12,6 +12,11 @@ using namespace std::placeholders;
 
 namespace bf
 {
+    UnscentedKalmanFilter::UnscentedKalmanFilter()
+        : BayesFilter()
+    {
+
+    }
 
     UnscentedKalmanFilter::UnscentedKalmanFilter(MotionModel *mm, SensorModel *sm)
         : BayesFilter(mm, sm)

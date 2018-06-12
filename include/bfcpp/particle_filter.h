@@ -32,6 +32,7 @@ namespace bf
         void resample();
 
     public:
+        ParticleFilter();
         ParticleFilter(MotionModel *mm, SensorModel *sm);
         ~ParticleFilter();
 

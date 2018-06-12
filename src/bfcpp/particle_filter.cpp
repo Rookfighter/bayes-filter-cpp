@@ -10,6 +10,12 @@
 
 namespace bf
 {
+    ParticleFilter::ParticleFilter()
+        : BayesFilter()
+    {
+
+    }
+
     ParticleFilter::ParticleFilter(MotionModel *mm, SensorModel *sm)
         : BayesFilter(mm, sm)
     {
