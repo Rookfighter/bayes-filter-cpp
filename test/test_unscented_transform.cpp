@@ -11,8 +11,47 @@
 
 using namespace bf;
 
+static Eigen::VectorXd linearTransform(const Eigen::VectorXd &state, const Eigen::VectorXd &facs)
+{
+    assert(state.rows() == facs.rows());
+
+    Eigen::VectorXd result(state.size());
+    for(unsigned int i = 0; i < state.rows(); ++i)
+        result(i) = state(i) * facs(i);
+
+    return result;
+}
+
+static Eigen::MatrixXd linearTransformCov(const Eigen::MatrixXd &cov, const Eigen::VectorXd &facs)
+{
+    assert(cov.rows() == facs.rows());
+
+    Eigen::MatrixXd result = Eigen::MatrixXd::Zero(cov.rows(), cov.cols());
+    for(unsigned int i = 0; i < cov.rows(); ++i)
+        result(i, i) = cov(i,i) * facs(i) * facs(i);
+
+    return result;
+}
+
+static SigmaPoints linearTransformSig(SigmaPoints &sigma, const Eigen::VectorXd &facs)
+{
+    assert(facs.rows() == sigma.points.rows());
+
+    SigmaPoints result;
+    result = sigma;
+    for(unsigned int i = 0; i < sigma.points.cols(); ++i)
+    {
+        result.points.col(i) = linearTransform(result.points.col(i), facs);
+    }
+
+    return result;
+}
+
 TEST_CASE("Unscented Transform")
 {
+    /* =====================================================================
+     *      Sigma Points
+     * ===================================================================== */
     SECTION("calculate sigma points")
     {
         const double eps = 1e-6;
@@ -104,6 +143,10 @@ TEST_CASE("Unscented Transform")
         }
     }
 
+    /* =====================================================================
+     *      Recover Distribution
+     * ===================================================================== */
+
     SECTION("recover distribution")
     {
         const double eps = 1e-6;
@@ -149,15 +192,16 @@ TEST_CASE("Unscented Transform")
             cov << 1, 0, 0,
                    0, 1, 0,
                    0, 0, 1;
-            Eigen::VectorXd diff(3);
-            diff << 1, 2, 3;
+            Eigen::VectorXd facs(3);
+            facs << 1, 2, 3;
 
             auto sigma = trans.calcSigmaPoints(state, cov);
-            for(unsigned int i = 0; i < sigma.points.cols(); ++i)
-                sigma.points.col(i) += diff;
+            sigma = linearTransformSig(sigma, facs);
 
             auto result = trans.recoverDistrib(sigma);
-            state += diff;
+
+            state = linearTransform(state, facs);
+            cov = linearTransformCov(cov, facs);
 
             REQUIRE_MAT(state, result.first, eps);
             REQUIRE_MAT(cov, result.second, eps);
@@ -171,18 +215,68 @@ TEST_CASE("Unscented Transform")
             cov << 1, 0, 0,
                    0, 0, 0,
                    0, 0, 0;
-            Eigen::VectorXd diff(3);
-            diff << 1, 2, 3;
+            Eigen::VectorXd facs(3);
+            facs << 1, 2, 3;
 
             auto sigma = trans.calcSigmaPoints(state, cov);
-            for(unsigned int i = 0; i < sigma.points.cols(); ++i)
-                sigma.points.col(i) += diff;
+            sigma = linearTransformSig(sigma, facs);
 
             auto result = trans.recoverDistrib(sigma);
-            state += diff;
+
+            state = linearTransform(state, facs);
+            cov = linearTransformCov(cov, facs);
 
             REQUIRE_MAT(state, result.first, eps);
             REQUIRE_MAT(cov, result.second, eps);
+        }
+    }
+
+    /* =====================================================================
+     *      Cross Covariance
+     * ===================================================================== */
+
+    SECTION("caclulate cross covariance")
+    {
+        const double eps = 1e-6;
+        UnscentedTransform trans;
+
+        SECTION("with identity transform")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1;
+
+            auto sigma = trans.calcSigmaPoints(state, cov);
+            auto result = trans.calcCrossCov(state, sigma, state, sigma);
+
+            REQUIRE_MAT(cov, result, eps);
+        }
+
+        SECTION("with linear transform")
+        {
+            Eigen::VectorXd state1(3);
+            state1 << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1;
+            Eigen::VectorXd facs(3);
+            facs << 1, 2, 3;
+            Eigen::VectorXd state2 = linearTransform(state1, facs);
+
+            Eigen::MatrixXd covexp(3,3);
+            covexp << 1, 0, 0,
+                      0, 2, 0,
+                      0, 0, 3;
+
+            auto sigma1 = trans.calcSigmaPoints(state1, cov);
+            auto sigma2 = linearTransformSig(sigma1, facs);
+            auto result = trans.calcCrossCov(state1, sigma1, state2, sigma2);
+
+            REQUIRE_MAT(covexp, result, eps);
         }
     }
 }
