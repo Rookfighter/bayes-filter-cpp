@@ -11,6 +11,12 @@
 
 using namespace bf;
 
+static Eigen::VectorXd identityTransform(const Eigen::VectorXd &state)
+{
+    return state;
+}
+
+
 static Eigen::VectorXd linearTransform(const Eigen::VectorXd &state, const Eigen::VectorXd &facs)
 {
     assert(state.rows() == facs.rows());
@@ -168,14 +174,14 @@ TEST_CASE("Unscented Transform")
             REQUIRE_MAT(cov, result.second, eps);
         }
 
-        SECTION("with identity transform and zero uncertainty")
+        SECTION("with identity transform and near zero uncertainty")
         {
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
             Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 0, 0,
-                   0, 0, 0;
+            cov << 1e-16, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1e-16;
 
             auto sigma = trans.calcSigmaPoints(state, cov);
             auto result = trans.recoverDistrib(sigma);
@@ -207,14 +213,14 @@ TEST_CASE("Unscented Transform")
             REQUIRE_MAT(cov, result.second, eps);
         }
 
-        SECTION("with linear transform and zero uncertainty")
+        SECTION("with linear transform and near zero uncertainty")
         {
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
             Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 0, 0,
-                   0, 0, 0;
+            cov << 1e-16, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1e-16;
             Eigen::VectorXd facs(3);
             facs << 1, 2, 3;
 
@@ -267,16 +273,128 @@ TEST_CASE("Unscented Transform")
             facs << 1, 2, 3;
             Eigen::VectorXd state2 = linearTransform(state1, facs);
 
-            Eigen::MatrixXd covexp(3,3);
-            covexp << 1, 0, 0,
-                      0, 2, 0,
-                      0, 0, 3;
+            Eigen::MatrixXd crossCov(3,3);
+            crossCov << 1, 0, 0,
+                        0, 2, 0,
+                        0, 0, 3;
 
             auto sigma1 = trans.calcSigmaPoints(state1, cov);
             auto sigma2 = linearTransformSig(sigma1, facs);
             auto result = trans.calcCrossCov(state1, sigma1, state2, sigma2);
 
-            REQUIRE_MAT(covexp, result, eps);
+            REQUIRE_MAT(crossCov, result, eps);
+        }
+
+        SECTION("with linear transform and near zero uncertainty")
+        {
+            Eigen::VectorXd state1(3);
+            state1 << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1e-16, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1e-16;
+            Eigen::VectorXd facs(3);
+            facs << 1, 2, 3;
+            Eigen::VectorXd state2 = linearTransform(state1, facs);
+
+            Eigen::MatrixXd crossCov(3,3);
+            crossCov << 0, 0, 0,
+                      0, 2, 0,
+                      0, 0, 0;
+
+            auto sigma1 = trans.calcSigmaPoints(state1, cov);
+            auto sigma2 = linearTransformSig(sigma1, facs);
+            auto result = trans.calcCrossCov(state1, sigma1, state2, sigma2);
+
+            REQUIRE_MAT(crossCov, result, eps);
+        }
+    }
+
+    /* =====================================================================
+     *      Transform Function
+     * ===================================================================== */
+
+    SECTION("apply transform function")
+    {
+        const double eps = 1e-6;
+        UnscentedTransform trans;
+
+        SECTION("with identity transform")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1;
+
+            auto result = trans.transform(
+                state,
+                cov,
+                std::bind(identityTransform, std::placeholders::_1),
+                true);
+
+            REQUIRE_MAT(state, result.state, eps);
+            REQUIRE_MAT(cov, result.cov, eps);
+            REQUIRE_MAT(cov, result.crossCov, eps);
+        }
+
+        SECTION("with linear transform")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1;
+            Eigen::VectorXd facs(3);
+            facs << 1, 2, 3;
+            Eigen::MatrixXd crossCov(3,3);
+            crossCov << 1, 0, 0,
+                        0, 2, 0,
+                        0, 0, 3;
+
+            auto result = trans.transform(
+                state,
+                cov,
+                std::bind(linearTransform, std::placeholders::_1, std::cref(facs)),
+                true);
+
+            state = linearTransform(state, facs);
+            cov = linearTransformCov(cov, facs);
+
+            REQUIRE_MAT(state, result.state, eps);
+            REQUIRE_MAT(cov, result.cov, eps);
+            REQUIRE_MAT(crossCov, result.crossCov, eps);
+        }
+
+        SECTION("with linear transform and near zero uncertainty")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1e-16, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1e-16;
+            Eigen::VectorXd facs(3);
+            facs << 1, 2, 3;
+            Eigen::MatrixXd crossCov(3,3);
+            crossCov << 0, 0, 0,
+                        0, 2, 0,
+                        0, 0, 0;
+
+            auto result = trans.transform(
+                state,
+                cov,
+                std::bind(linearTransform, std::placeholders::_1, std::cref(facs)),
+                true);
+
+            state = linearTransform(state, facs);
+            cov = linearTransformCov(cov, facs);
+
+            REQUIRE_MAT(state, result.state, eps);
+            REQUIRE_MAT(cov, result.cov, eps);
+            REQUIRE_MAT(crossCov, result.crossCov, eps);
         }
     }
 }
