@@ -42,6 +42,8 @@ namespace bf
         void setAlpha(const double alpha);
         void setBeta(const double beta);
 
+        double calcLambda(const unsigned int n) const;
+
         /** Calculates sigma points from the given state and covariance.
          *  @param state state vector
          *  @param cov covariance matrix, has (state.size(), state.size()) dimensions

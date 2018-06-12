@@ -35,15 +35,22 @@ namespace bf
         beta_ = beta;
     }
 
-    SigmaPoints UnscentedTransform::calcSigmaPoints(const Eigen::VectorXd &state,
-            const Eigen::MatrixXd &cov) const
+    double UnscentedTransform::calcLambda(const unsigned int n) const
+    {
+        double nd = static_cast<double>(n);
+        return alpha_ * alpha_ * (nd + kappa_) - nd;
+    }
+
+    SigmaPoints UnscentedTransform::calcSigmaPoints(
+        const Eigen::VectorXd &state,
+        const Eigen::MatrixXd &cov) const
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
 
         unsigned int n = state.size();
         double nd = static_cast<double>(n);
-        double lambda = alpha_ * alpha_ * (nd + kappa_) - nd;
+        double lambda = calcLambda(n);
 
         SigmaPoints result;
         result.points.resize(n, 2 * n + 1);
