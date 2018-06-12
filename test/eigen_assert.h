@@ -5,8 +5,10 @@
  *      Author: Fabian Meyer
  */
 
-#ifndef BFCPP_EIGEN_ASSERT_H_
-#define BFCPP_EIGEN_ASSERT_H_
+#ifndef BFCPP_TEST_EIGEN_ASSERT_H_
+#define BFCPP_TEST_EIGEN_ASSERT_H_
+
+#include <catch.hpp>
 
 #define REQUIRE_MAT(a, b, eps) {                                        \
     REQUIRE(a.cols() == b.cols());                                      \

@@ -110,12 +110,6 @@ namespace bf
         assert(result.cov.cols() == obsCov.cols());
 
         result.cov += obsCov;
-        for(unsigned int i = 0; i < result.cov.cols(); ++ i)
-        {
-            if(iszero(result.cov(i, i), 1e-12))
-                result.cov(i, i) = 1;
-        }
-
         // calculate kalman gain
         Eigen::MatrixXd kalGain = result.crossCov * result.cov.inverse();
 
