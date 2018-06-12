@@ -5,8 +5,8 @@
  *      Author: Fabian Meyer
  */
 
-#include "bfcpp/particle_filter.h"
-#include "bfcpp/math.h"
+#include "bayes_filter/particle_filter.h"
+#include "bayes_filter/math.h"
 
 namespace bf
 {

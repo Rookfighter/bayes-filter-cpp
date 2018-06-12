@@ -9,7 +9,7 @@
 #define BFCPP_PARTICLE_FILTER_H_
 
 #include <random>
-#include "bfcpp/bayes_filter.h"
+#include "bayes_filter/bayes_filter.h"
 
 namespace bf
 {

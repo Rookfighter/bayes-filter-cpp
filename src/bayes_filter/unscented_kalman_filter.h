@@ -8,8 +8,8 @@
 #ifndef BFCPP_UNSCENTED_KALMAN_FILTER_H_
 #define BFCPP_UNSCENTED_KALMAN_FILTER_H_
 
-#include "bfcpp/bayes_filter.h"
-#include "bfcpp/unscented_transform.h"
+#include "bayes_filter/bayes_filter.h"
+#include "bayes_filter/unscented_transform.h"
 
 namespace bf
 {

@@ -15,16 +15,18 @@ set(BFCPP_LIBRARY bfcpp)
 add_subdirectory(dep)
 
 include_directories(
-    include
+    src
     ${EIGEN3_INCLUDE_DIR}
     ${CATCH2_INCLUDE_DIR}
 )
 
-file(GLOB SRC src/bfcpp/*.cpp)
+file(GLOB SRC src/bayes_filter/*.cpp)
 
 add_library(${BFCPP_LIBRARY} ${SRC})
 
 install(TARGETS ${BFCPP_LIBRARY}
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
-install(DIRECTORY include/bfcpp DESTINATION include)
+install(DIRECTORY src/bayes_cpp
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h")

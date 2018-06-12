@@ -8,7 +8,7 @@
 #ifndef BFCPP_BAYES_FILTER_H_
 #define BFCPP_BAYES_FILTER_H_
 
-#include "bfcpp/models.h"
+#include "bayes_filter/models.h"
 
 namespace bf
 {

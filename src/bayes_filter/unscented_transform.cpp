@@ -5,7 +5,7 @@
  *      Author: Fabian Meyer
  */
 
-#include "bfcpp/unscented_transform.h"
+#include "bayes_filter/unscented_transform.h"
 
 namespace bf
 {

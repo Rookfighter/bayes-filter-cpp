@@ -5,8 +5,8 @@
  *      Author: Fabian Meyer
  */
 
-#include "bfcpp/unscented_kalman_filter.h"
-#include "bfcpp/math.h"
+#include "bayes_filter/unscented_kalman_filter.h"
+#include "bayes_filter/math.h"
 
 using namespace std::placeholders;
 
