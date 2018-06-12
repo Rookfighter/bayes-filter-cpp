@@ -13,12 +13,14 @@
 
 namespace bf
 {
+    /** Particle representing a single state estimate with a weight. */
     struct Particle
     {
         Eigen::VectorXd state;
         double weight;
     };
 
+    /** Implementation of a Particle Filter.*/
     class ParticleFilter: public BayesFilter
     {
     private:
@@ -28,6 +30,9 @@ namespace bf
         Eigen::VectorXd randomizeState(const Eigen::VectorXd &state,
                                        const Eigen::MatrixXd &cov);
         void normalizeWeight();
+
+        /** Calculates the number of effective particles as 1 / sum(weight^2).
+         *  @return number of effective particles */
         double effectiveParticles() const;
         void resample();
 
@@ -40,6 +45,9 @@ namespace bf
         const std::vector<Particle> &particles() const;
 
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEstimate() const override;
+
+        /** Returns the most likely (highest weight) state estimate.
+         *  @return most likely state estimate */
         Eigen::VectorXd getMostLikely() const;
 
         void init(const Eigen::VectorXd &state,

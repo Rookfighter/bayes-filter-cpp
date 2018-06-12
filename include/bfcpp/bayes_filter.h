@@ -12,6 +12,7 @@
 
 namespace bf
 {
+    /** base class for bayes filter implementations. */
     class BayesFilter
     {
     private:
