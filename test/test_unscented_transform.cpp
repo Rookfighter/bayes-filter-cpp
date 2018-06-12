@@ -11,64 +11,178 @@
 
 using namespace bf;
 
-TEST_CASE("sigma points")
+TEST_CASE("Unscented Transform")
 {
-    const double eps = 1e-6;
-    UnscentedTransform trans;
-
-    SECTION("with simple params")
+    SECTION("calculate sigma points")
     {
-        trans.setAlpha(1.0);
-        trans.setBeta(1.0);
-        trans.setKappa(1.0);
+        const double eps = 1e-6;
+        UnscentedTransform trans;
 
-        Eigen::VectorXd state(3);
-        state << 1, 1, 1;
-        Eigen::MatrixXd cov(3,3);
-        cov << 1, 0, 0,
-               0, 1, 0,
-               0, 0, 1;
+        SECTION("with simple params")
+        {
+            trans.setAlpha(1.0);
+            trans.setBeta(1.0);
+            trans.setKappa(1.0);
 
-        Eigen::MatrixXd wexp(2, 7);
-        wexp << 0.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
-                1.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125;
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1;
 
-        Eigen::MatrixXd sexp(3, 7);
-        sexp << 1, 3, 1, 1, -1,  1,  1,
-                1, 1, 3, 1,  1, -1,  1,
-                1, 1, 1, 3,  1,  1, -1;
+            Eigen::MatrixXd wexp(2, 7);
+            wexp << 0.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
+                    1.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125;
 
-        auto result = trans.calcSigmaPoints(state, cov);
+            Eigen::MatrixXd sexp(3, 7);
+            sexp << 1, 3, 1, 1, -1,  1,  1,
+                    1, 1, 3, 1,  1, -1,  1,
+                    1, 1, 1, 3,  1,  1, -1;
 
-        REQUIRE(trans.calcLambda(state.size()) == Approx(1.0).epsilon(eps));
-        REQUIRE_MAT(wexp, result.weights, eps);
-        REQUIRE_MAT(sexp, result.points, eps);
+            auto result = trans.calcSigmaPoints(state, cov);
+
+            REQUIRE(trans.calcLambda(state.size()) == Approx(1.0).margin(eps));
+            REQUIRE_MAT(wexp, result.weights, eps);
+            REQUIRE_MAT(sexp, result.points, eps);
+        }
+
+        SECTION("with different params")
+        {
+            trans.setAlpha(1.0);
+            trans.setBeta(2.0);
+            trans.setKappa(2.0);
+
+            Eigen::VectorXd state(2);
+            state << 1,1;
+            Eigen::MatrixXd cov(2,2);
+            cov << 1, 0,
+                   0, 1;
+
+            Eigen::MatrixXd wexp(2, 5);
+            wexp << 0.5, 0.125, 0.125, 0.125, 0.125,
+                    2.5, 0.125, 0.125, 0.125, 0.125;
+
+            Eigen::MatrixXd sexp(2, 5);
+            sexp << 1, 3, 1, -1,  1,
+                    1, 1, 3,  1, -1;
+
+            auto result = trans.calcSigmaPoints(state, cov);
+
+            REQUIRE(trans.calcLambda(state.size()) == Approx(2.0).margin(eps));
+            REQUIRE_MAT(wexp, result.weights, eps);
+            REQUIRE_MAT(sexp, result.points, eps);
+        }
+
+        SECTION("with zero uncertainty")
+        {
+            trans.setAlpha(1.0);
+            trans.setBeta(1.0);
+            trans.setKappa(1.0);
+
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 0, 0,
+                   0, 0, 0;
+
+            Eigen::MatrixXd wexp(2, 7);
+            wexp << 0.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
+                    1.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125;
+
+            Eigen::MatrixXd sexp(3, 7);
+            sexp << 1, 3, 1, 1, -1,  1,  1,
+                    1, 1, 1, 1,  1,  1,  1,
+                    1, 1, 1, 1,  1,  1,  1;
+
+            auto result = trans.calcSigmaPoints(state, cov);
+
+            REQUIRE(trans.calcLambda(state.size()) == Approx(1.0).margin(eps));
+            REQUIRE_MAT(wexp, result.weights, eps);
+            REQUIRE_MAT(sexp, result.points, eps);
+        }
     }
 
-    SECTION("with different params")
+    SECTION("recover distribution")
     {
-        trans.setAlpha(1.0);
-        trans.setBeta(2.0);
-        trans.setKappa(2.0);
+        const double eps = 1e-6;
+        UnscentedTransform trans;
 
-        Eigen::VectorXd state(2);
-        state << 1,1;
-        Eigen::MatrixXd cov(2,2);
-        cov << 1, 0,
-               0, 1;
+        SECTION("with identity transform")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1;
 
-        Eigen::MatrixXd wexp(2, 5);
-        wexp << 0.5, 0.125, 0.125, 0.125, 0.125,
-                2.5, 0.125, 0.125, 0.125, 0.125;
+            auto sigma = trans.calcSigmaPoints(state, cov);
+            auto result = trans.recoverDistrib(sigma);
 
-        Eigen::MatrixXd sexp(2, 5);
-        sexp << 1, 3, 1, -1,  1,
-                1, 1, 3,  1, -1;
+            REQUIRE_MAT(state, result.first, eps);
+            REQUIRE_MAT(cov, result.second, eps);
+        }
 
-        auto result = trans.calcSigmaPoints(state, cov);
+        SECTION("with identity transform and zero uncertainty")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 0, 0,
+                   0, 0, 0;
 
-        REQUIRE(trans.calcLambda(state.size()) == Approx(2.0).epsilon(eps));
-        REQUIRE_MAT(wexp, result.weights, eps);
-        REQUIRE_MAT(sexp, result.points, eps);
+            auto sigma = trans.calcSigmaPoints(state, cov);
+            auto result = trans.recoverDistrib(sigma);
+
+            REQUIRE_MAT(state, result.first, eps);
+            REQUIRE_MAT(cov, result.second, eps);
+        }
+
+        SECTION("with linear transform")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 1, 0,
+                   0, 0, 1;
+            Eigen::VectorXd diff(3);
+            diff << 1, 2, 3;
+
+            auto sigma = trans.calcSigmaPoints(state, cov);
+            for(unsigned int i = 0; i < sigma.points.cols(); ++i)
+                sigma.points.col(i) += diff;
+
+            auto result = trans.recoverDistrib(sigma);
+            state += diff;
+
+            REQUIRE_MAT(state, result.first, eps);
+            REQUIRE_MAT(cov, result.second, eps);
+        }
+
+        SECTION("with linear transform and zero uncertainty")
+        {
+            Eigen::VectorXd state(3);
+            state << 1, 1, 1;
+            Eigen::MatrixXd cov(3,3);
+            cov << 1, 0, 0,
+                   0, 0, 0,
+                   0, 0, 0;
+            Eigen::VectorXd diff(3);
+            diff << 1, 2, 3;
+
+            auto sigma = trans.calcSigmaPoints(state, cov);
+            for(unsigned int i = 0; i < sigma.points.cols(); ++i)
+                sigma.points.col(i) += diff;
+
+            auto result = trans.recoverDistrib(sigma);
+            state += diff;
+
+            REQUIRE_MAT(state, result.first, eps);
+            REQUIRE_MAT(cov, result.second, eps);
+        }
     }
 }
