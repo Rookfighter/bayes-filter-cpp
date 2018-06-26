@@ -73,6 +73,7 @@ TEST_CASE("Unscented Kalman Filter")
             REQUIRE_MAT(state, result.first, eps);
             REQUIRE_MAT(cov, result.second, eps);
         }
+
     }
 
     SECTION("correction step")
@@ -101,6 +102,31 @@ TEST_CASE("Unscented Kalman Filter")
 
             ukf.init(state, cov);
             ukf.correct(obs, noise);
+
+            auto result = ukf.getEstimate();
+
+            state << 0.5, 0.5, 0.5, 0.5;
+            cov << 3.1,   0, 1.0,   0,
+                     0, 3.1,   0, 1.0,
+                   1.0,   0, 1.1,   0,
+                     0, 1.0,   0, 1.1;
+
+            // REQUIRE_MAT(state, result.first, eps);
+            // REQUIRE_MAT(cov, result.second, eps);
+        }
+
+        SECTION("with empty observations")
+        {
+            Eigen::VectorXd state(4);
+            state << 0, 0, 0.5, 0.5;
+            Eigen::MatrixXd cov(4, 4);
+            cov << 2, 0 ,0, 0,
+                   0, 2, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 1;
+
+            ukf.init(state, cov);
+            ukf.correct(Eigen::MatrixXd(), noise);
 
             auto result = ukf.getEstimate();
 

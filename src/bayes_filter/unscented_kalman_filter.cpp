@@ -105,8 +105,9 @@ namespace bf
 
         auto sigmaA = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
         SigmaPoints sigmaB;
+        sigmaB.points.resize(0, sigmaA.points.cols());
         sigmaB.weights = sigmaA.weights;
-        for(unsigned int i = 1; i < sigmaA.points.cols(); ++i)
+        for(unsigned int i = 0; i < sigmaA.points.cols(); ++i)
         {
             // transform points through sensor model
             auto smResult = sensorModel().estimateObservations(
@@ -115,7 +116,8 @@ namespace bf
             if(sigmaB.points.rows() < smResult.val.size())
                 sigmaB.points.resize(smResult.val.size(), sigmaA.points.cols());
             // normalize resulting observations
-            sigmaB.points.col(i) = normObs_(mat2vec(smResult.val));
+            auto tmp = mat2vec(smResult.val);
+            sigmaB.points.col(i) = normObs_(tmp);
         }
 
         auto mu = unscentTrans_.recoverMean(sigmaB, normObs_);
