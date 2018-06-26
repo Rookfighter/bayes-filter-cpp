@@ -12,14 +12,23 @@ using namespace std::placeholders;
 
 namespace bf
 {
+    static Eigen::VectorXd noNormalize(const Eigen::VectorXd &v)
+    {
+        return v;
+    }
+
     UnscentedKalmanFilter::UnscentedKalmanFilter()
-        : BayesFilter()
+        : BayesFilter(), unscentTrans_(),
+        normState_(std::bind(noNormalize, _1)),
+        normObs_(std::bind(noNormalize, _1))
     {
 
     }
 
     UnscentedKalmanFilter::UnscentedKalmanFilter(MotionModel *mm, SensorModel *sm)
-        : BayesFilter(mm, sm)
+        : BayesFilter(mm, sm),
+        normState_(std::bind(noNormalize, _1)),
+        normObs_(std::bind(noNormalize, _1))
     {
 
     }
@@ -27,6 +36,16 @@ namespace bf
     UnscentedKalmanFilter::~UnscentedKalmanFilter()
     {
 
+    }
+
+    void UnscentedKalmanFilter::setNormalizeState(const NormalizeFunc &normalize)
+    {
+        normState_ = normalize;
+    }
+
+    void UnscentedKalmanFilter::setNormalizeObservation(const NormalizeFunc &normalize)
+    {
+        normObs_ = normalize;
     }
 
     std::pair<Eigen::VectorXd, Eigen::MatrixXd> UnscentedKalmanFilter::getEstimate()
@@ -45,14 +64,6 @@ namespace bf
         cov_ = cov;
     }
 
-    Eigen::VectorXd UnscentedKalmanFilter::estimateState(
-        const Eigen::VectorXd &state,
-        const Eigen::VectorXd &controls,
-        const Eigen::MatrixXd &observations) const
-    {
-        return motionModel().estimateState(state, controls, observations).val;
-    }
-
     void UnscentedKalmanFilter::predict(const Eigen::VectorXd &controls,
                                         const Eigen::MatrixXd &observations,
                                         const Eigen::MatrixXd &motionCov)
@@ -60,32 +71,28 @@ namespace bf
         assert(state_.size() == motionCov.rows());
         assert(state_.size() == motionCov.cols());
 
-        // bind transform function for UT
-        UnscentedTransform::TransformFunc func =
-            std::bind(&UnscentedKalmanFilter::estimateState, this,
-                      std::placeholders::_1,
-                      std::cref(controls),
-                      std::cref(observations));
-        // perform unscented transform on current state estimate
-        auto result = unscentTrans_.transform(state_, cov_, func);
+        auto sigma = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
+        for(unsigned int i = 0; i < sigma.points.cols(); ++i)
+        {
+            // transform points through motion model
+            auto mmResult = motionModel().estimateState(
+                sigma.points.col(i), controls, observations);
+            // normalize resulting state
+            sigma.points.col(i) = normState_(mmResult.val);
+        }
+
+        auto mu = unscentTrans_.recoverMean(sigma, normState_);
+        auto cov = unscentTrans_.recoverCovariance(sigma, mu, normState_);
 
         // update current state estimate
-        state_ = result.state;
-        cov_ = result.cov + motionCov;
-    }
-
-    Eigen::VectorXd UnscentedKalmanFilter::estimateObservations(
-        const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &observations) const
-    {
-        Eigen::MatrixXd estObs = sensorModel().estimateObservations(state,
-                                 observations).val;
-        return mat2vec(estObs);
+        state_ = mu;
+        cov_ = cov + motionCov;
     }
 
     void UnscentedKalmanFilter::correct(const Eigen::MatrixXd &observations,
                                         const Eigen::MatrixXd &sensorCov)
     {
+        // transform observation matrix into vector
         Eigen::VectorXd obs = mat2vec(observations);
 
         assert(sensorCov.rows() == sensorCov.cols());
@@ -96,25 +103,38 @@ namespace bf
             obsCov(i, i) = sensorCov(j, j);
         }
 
-        // bind transform function for UT
-        UnscentedTransform::TransformFunc func =
-            std::bind(&UnscentedKalmanFilter::estimateObservations, this,
-                      std::placeholders::_1,
-                      std::cref(observations));
+        auto sigmaA = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
+        SigmaPoints sigmaB;
+        for(unsigned int i = 1; i < sigmaA.points.cols(); ++i)
+        {
+            // transform points through sensor model
+            auto smResult = sensorModel().estimateObservations(
+                sigmaA.points.col(i), observations);
+            // if sigmaB was not initialized init it now
+            if(sigmaB.points.rows() < smResult.val.size())
+                sigmaB.points.resize(smResult.val.size(), sigmaA.points.cols());
+            // normalize resulting observations
+            sigmaB.points.col(i) = normObs_(mat2vec(smResult.val));
+        }
 
-        // perform unscented transform
-        auto result = unscentTrans_.transform(state_, cov_, func, true);
+        auto mu = unscentTrans_.recoverMean(sigmaB, normObs_);
+        auto cov = unscentTrans_.recoverCovariance(sigmaB, mu, normObs_);
+        auto crossCov = unscentTrans_.recoverCrossCovariance(
+            sigmaA, state_, normState_,
+            sigmaB, mu, normObs_);
 
-        assert(result.state.size() == obs.size());
-        assert(result.cov.rows() == obsCov.rows());
-        assert(result.cov.cols() == obsCov.cols());
+        assert(mu.size() == obs.size());
+        assert(cov.rows() == obsCov.rows());
+        assert(cov.cols() == obsCov.cols());
+        assert(crossCov.rows() == state_.size());
+        assert(crossCov.cols() == mu.size());
 
-        result.cov += obsCov;
+        cov += obsCov;
         // calculate kalman gain
-        Eigen::MatrixXd kalGain = result.crossCov * result.cov.inverse();
+        Eigen::MatrixXd kalGain = crossCov * cov.inverse();
 
         // correct current state estimate
-        state_ += kalGain * (obs - result.state);
-        cov_ -= kalGain * result.cov * kalGain.transpose();
+        state_ += kalGain * normObs_(obs - mu);
+        cov_ -= kalGain * cov * kalGain.transpose();
     }
 }

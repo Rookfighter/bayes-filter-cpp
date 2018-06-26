@@ -15,22 +15,34 @@ namespace bf
 {
     class UnscentedKalmanFilter: public BayesFilter
     {
+    public:
+        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)> NormalizeFunc;
     private:
         UnscentedTransform unscentTrans_;
+
+        NormalizeFunc normState_;
+        NormalizeFunc normObs_;
 
         Eigen::VectorXd state_;
         Eigen::MatrixXd cov_;
 
-        Eigen::VectorXd estimateObservations(const Eigen::VectorXd &state,
-                                             const Eigen::MatrixXd &observations) const;
-        Eigen::VectorXd estimateState(const Eigen::VectorXd &state,
-                                      const Eigen::VectorXd &controls,
-                                      const Eigen::MatrixXd &observations) const;
+        Eigen::VectorXd calcMean(const SigmaPoints &sigma) const;
+        Eigen::VectorXd calcCovariance(
+            const SigmaPoints &sigma,
+            const Eigen::VectorXd &mean) const;
+        Eigen::VectorXd calcCrossCovariance(
+            const SigmaPoints &sigmaA,
+            const Eigen::VectorXd &meanA,
+            const SigmaPoints &sigmaB,
+            const Eigen::VectorXd &meanB) const;
 
     public:
         UnscentedKalmanFilter();
         UnscentedKalmanFilter(MotionModel *mm, SensorModel *sm);
         ~UnscentedKalmanFilter();
+
+        void setNormalizeState(const NormalizeFunc &normalize);
+        void setNormalizeObservation(const NormalizeFunc &normalize);
 
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEstimate() const override;
 

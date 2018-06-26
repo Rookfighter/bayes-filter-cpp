@@ -35,7 +35,7 @@ namespace bf
         beta_ = beta;
     }
 
-    double UnscentedTransform::calcLambda(const unsigned int n) const
+    double UnscentedTransform::calcLambda(const size_t n) const
     {
         double nd = static_cast<double>(n);
         return alpha_ * alpha_ * (nd + kappa_) - nd;
@@ -43,7 +43,8 @@ namespace bf
 
     SigmaPoints UnscentedTransform::calcSigmaPoints(
         const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &cov) const
+        const Eigen::MatrixXd &cov,
+        const NormalizeFunc& normalize) const
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
@@ -65,11 +66,11 @@ namespace bf
 
         for(unsigned int i = 0; i < n; ++i)
         {
-            result.points.col(i + 1) = state + sigmaOffset.col(i);
+            result.points.col(i + 1) = normalize(state + sigmaOffset.col(i));
             result.weights(0, i + 1) = constWeight;
             result.weights(1, i + 1) = constWeight;
 
-            result.points.col(i + 1 + n) = state - sigmaOffset.col(i);
+            result.points.col(i + 1 + n) = normalize(state - sigmaOffset.col(i));
             result.weights(0, i + 1 + n) = constWeight;
             result.weights(1, i + 1 + n) = constWeight;
         }
@@ -77,80 +78,59 @@ namespace bf
         return result;
     }
 
-    std::pair<Eigen::VectorXd, Eigen::MatrixXd> UnscentedTransform::recoverDistrib(
-        const SigmaPoints &sigmaPoints) const
+    Eigen::VectorXd UnscentedTransform::recoverMean(
+        const SigmaPoints &sigma,
+        const NormalizeFunc& normalize) const
     {
-        assert(sigmaPoints.points.cols() == sigmaPoints.weights.cols());
+        assert(sigma.points.cols() == sigma.weights.cols());
 
-        Eigen::VectorXd mu = Eigen::VectorXd::Zero(sigmaPoints.points.rows());
-        Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(mu.size(), mu.size());
+        Eigen::VectorXd result = Eigen::VectorXd::Zero(sigma.points.rows());
+        for(unsigned int i = 0; i < sigma.points.cols(); ++i)
+            result += sigma.weights(0, i) * sigma.points.col(i);
 
-        // calculate new mean
-        for(unsigned int i = 0; i < sigmaPoints.points.cols(); ++i)
-            mu += sigmaPoints.weights(0, i) * sigmaPoints.points.col(i);
-
-        for(unsigned int i = 0; i < sigmaPoints.points.cols(); ++i)
-        {
-            Eigen::VectorXd diff = sigmaPoints.points.col(i) - mu;
-            cov += sigmaPoints.weights(1, i) * diff * diff.transpose();
-        }
-
-        return {mu, cov};
+        return normalize(result);
     }
 
-    Eigen::MatrixXd UnscentedTransform::calcCrossCov(const Eigen::VectorXd
-            &stateOld,
-            const SigmaPoints &sigmaOld,
-            const Eigen::VectorXd &stateNew,
-            const SigmaPoints &sigmaNew) const
+    Eigen::MatrixXd UnscentedTransform::recoverCovariance(
+        const SigmaPoints &sigma,
+        const Eigen::VectorXd &mean,
+        const NormalizeFunc& normalize) const
     {
-        assert(sigmaOld.points.rows() == stateOld.size());
-        assert(sigmaNew.points.rows() == stateNew.size());
-        assert(sigmaOld.points.cols() == sigmaNew.points.cols());
+        assert(sigma.points.cols() == sigma.weights.cols());
+        assert(sigma.points.rows() == mean.size());
 
-        Eigen::MatrixXd result = Eigen::MatrixXd::Zero(stateOld.size(),
-                                 stateNew.size());
-
-        for(unsigned int i = 0; i < sigmaOld.points.cols(); ++i)
+        Eigen::MatrixXd result = Eigen::MatrixXd::Zero(mean.size(), mean.size());
+        for(unsigned int i = 0; i < sigma.points.cols(); ++i)
         {
-            Eigen::VectorXd diffA = sigmaOld.points.col(i) - stateOld;
-            Eigen::VectorXd diffB = sigmaNew.points.col(i) - stateNew;
-            result += sigmaOld.weights(1, i) * diffA * diffB.transpose();
+            Eigen::VectorXd diff = normalize(sigma.points.col(i) - mean);
+            result += sigma.weights(1, i) * diff * diff.transpose();
         }
 
         return result;
     }
 
-    UnscentedTransform::Result UnscentedTransform::transform(
-        const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &cov,
-        const TransformFunc &func,
-        const bool cross) const
+    Eigen::MatrixXd UnscentedTransform::recoverCrossCovariance(
+        const SigmaPoints &sigmaA,
+        const Eigen::VectorXd &meanA,
+        const NormalizeFunc& normalizeA,
+        const SigmaPoints &sigmaB,
+        const Eigen::VectorXd &meanB,
+        const NormalizeFunc& normalizeB) const
     {
-        Result result;
+        assert(sigmaA.points.rows() == meanA.size());
+        assert(sigmaB.points.rows() == meanB.size());
+        assert(sigmaA.points.cols() == sigmaB.points.cols());
 
-        // calc sigmapoints with given state and covariance
-        SigmaPoints sigmaOld = calcSigmaPoints(state, cov);
+        Eigen::MatrixXd result = Eigen::MatrixXd::Zero(
+            meanA.size(),
+            meanB.size());
 
-        // setup result sigma points set
-        SigmaPoints sigmaNew;
-        sigmaNew.weights = sigmaOld.weights;
-
-        Eigen::VectorXd val = func(sigmaOld.points.col(0));
-        sigmaNew.points.resize(val.size(), sigmaOld.points.cols());
-        sigmaNew.points.col(0) = val;
-
-        // transform sigma points through given function
-        for(unsigned int i = 1; i < sigmaOld.points.cols(); ++i)
-            sigmaNew.points.col(i) = func(sigmaOld.points.col(i));
-
-        // recover distribution from transformed points
-        auto newDistrib =  recoverDistrib(sigmaNew);
-        result.state = newDistrib.first;
-        result.cov = newDistrib.second;
-
-        if(cross)
-            result.crossCov = calcCrossCov(state, sigmaOld, result.state, sigmaNew);
+        for(unsigned int i = 0; i < sigmaA.points.cols(); ++i)
+        {
+            Eigen::VectorXd diffA = normalizeA(sigmaA.points.col(i) - meanA);
+            Eigen::VectorXd diffB = normalizeB(sigmaB.points.col(i) - meanB);
+            result += sigmaA.weights(1, i) * diffA * diffB.transpose();
+        }
 
         return result;
     }

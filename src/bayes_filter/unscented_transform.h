@@ -26,7 +26,7 @@ namespace bf
         double alpha_;
         double beta_;
     public:
-        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)> TransformFunc;
+        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)> NormalizeFunc;
 
         struct Result
         {
@@ -42,42 +42,35 @@ namespace bf
         void setAlpha(const double alpha);
         void setBeta(const double beta);
 
-        double calcLambda(const unsigned int n) const;
+        double calcLambda(const size_t n) const;
 
         /** Calculates sigma points from the given state and covariance.
          *  @param state state vector
-         *  @param cov covariance matrix, has (state.size(), state.size()) dimensions
-         *  @return set of sigma points and corresponding weights
-         */
+         *  @param cov covariance matrix, (state.size(), state.size()) dimensions
+         *  @return set of sigma points and corresponding weights */
         SigmaPoints calcSigmaPoints(const Eigen::VectorXd &state,
-                                    const Eigen::MatrixXd &cov) const;
-
-        /** Recovers a gaussian distribution from the given sigma points.
-         *  @param sigmaPoints set of sigma points and corresponding weights
-         *  @return pair of recovered mean and covariance
-         */
-        std::pair<Eigen::VectorXd, Eigen::MatrixXd> recoverDistrib(
-            const SigmaPoints &sigmaPoints) const;
-
-        Eigen::MatrixXd calcCrossCov(const Eigen::VectorXd &stateOld,
-                                     const SigmaPoints &sigmaOld,
-                                     const Eigen::VectorXd &stateNew,
-                                     const SigmaPoints &sigmaNew) const;
-
-        /** Performs a unscented transform on the given state and covariance
-         *  with the given function.
-         *  @param state state vector
-         *  @param cov covariance matrix, has (state.size(), state.size()) dimensions
-         *  @param func function to be used on sigma points
-         *  @param cross flag to enable cross correlation calculation
-         *  @return struct containing transformed state, covariance and cross correlation.
-         */
-        Result transform(
-            const Eigen::VectorXd &state,
             const Eigen::MatrixXd &cov,
-            const TransformFunc &func,
-            const bool cross = false) const;
+            const NormalizeFunc &normalize) const;
 
+        /** Recovers the mean value from sigma points.
+         *  @param sigma sigma points
+         *  @param normalize normalization function for a sigma point
+         *  @return mean of the sigma points, normalized */
+        Eigen::VectorXd recoverMean(const SigmaPoints &sigma,
+            const NormalizeFunc &normalize) const;
+
+        Eigen::MatrixXd recoverCovariance(
+            const SigmaPoints &sigma,
+            const Eigen::VectorXd &mean,
+            const NormalizeFunc& normalize) const;
+
+        Eigen::MatrixXd recoverCrossCovariance(
+            const SigmaPoints &sigmaA,
+            const Eigen::VectorXd &meanA,
+            const NormalizeFunc& normalizeA,
+            const SigmaPoints &sigmaB,
+            const Eigen::VectorXd &meanB,
+            const NormalizeFunc& normalizeB) const;
     };
 }
 
