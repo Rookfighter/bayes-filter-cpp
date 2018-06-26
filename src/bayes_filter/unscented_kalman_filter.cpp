@@ -105,6 +105,7 @@ namespace bf
 
         auto sigmaA = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
         SigmaPoints sigmaB;
+        sigmaB.weights = sigmaA.weights;
         for(unsigned int i = 1; i < sigmaA.points.cols(); ++i)
         {
             // transform points through sensor model

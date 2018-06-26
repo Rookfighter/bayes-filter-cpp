@@ -77,6 +77,41 @@ TEST_CASE("Unscented Kalman Filter")
 
     SECTION("correction step")
     {
+        // const double eps = 1e-6;
+        UnscentedKalmanFilter ukf(
+            new ConstVelMotionModel(),
+            new IdentitySensorModel());
+        Eigen::MatrixXd noise(2,2);
+        noise << 0.1,   0,
+               0, 0.1;
 
+       SECTION("with regular input")
+       {
+
+            Eigen::VectorXd state(4);
+            state << 0, 0, 0.5, 0.5;
+            Eigen::MatrixXd cov(4, 4);
+            cov << 2, 0 ,0, 0,
+                   0, 2, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 1;
+            Eigen::MatrixXd obs(2,4);
+            obs << 1, 2, 3, 4,
+                        4, 3, 2, 1;
+
+            ukf.init(state, cov);
+            ukf.correct(obs, noise);
+
+            auto result = ukf.getEstimate();
+
+            state << 0.5, 0.5, 0.5, 0.5;
+            cov << 3.1,   0, 1.0,   0,
+                     0, 3.1,   0, 1.0,
+                   1.0,   0, 1.1,   0,
+                     0, 1.0,   0, 1.1;
+
+            // REQUIRE_MAT(state, result.first, eps);
+            // REQUIRE_MAT(cov, result.second, eps);
+        }
     }
 }
