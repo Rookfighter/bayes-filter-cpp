@@ -33,7 +33,7 @@ namespace bf
                                        const Eigen::MatrixXd &cov);
         void normalizeWeight();
 
-        /** Calculates the number of effective particles as 1 / sum(weight^2).
+        /** Calculates the number of effective particles as: 1 / sum(weight^2).
          *  @return number of effective particles */
         double effectiveParticles() const;
         void resample();

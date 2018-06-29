@@ -70,10 +70,12 @@ namespace bf
         assert(state_.size() == motionCov.rows());
         assert(state_.size() == motionCov.cols());
 
+        // calculate sigma points
         auto sigma = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
+        // transform sigma points through motion model
         for(unsigned int i = 0; i < sigma.points.cols(); ++i)
         {
-            // transform points through motion model
+            // estimate new state for sigma point
             auto mmResult = motionModel().estimateState(
                 sigma.points.col(i), controls, observations);
             // normalize resulting state
@@ -95,6 +97,9 @@ namespace bf
         Eigen::VectorXd obs = mat2vec(observations);
 
         assert(sensorCov.rows() == sensorCov.cols());
+
+        // reshape sensorCov (=single measurement) into cov matrix
+        // for all received observations
         Eigen::MatrixXd obsCov = Eigen::MatrixXd::Zero(obs.size(), obs.size());
         for(unsigned int i = 0; i <  obs.size(); ++i)
         {
@@ -102,13 +107,16 @@ namespace bf
             obsCov(i, i) = sensorCov(j, j);
         }
 
+        // calculate sigma points
         auto sigmaA = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
         SigmaPoints sigmaB;
         sigmaB.points.resize(0, sigmaA.points.cols());
         sigmaB.weights = sigmaA.weights;
+
+        // transform sigma points through sensor model
         for(unsigned int i = 0; i < sigmaA.points.cols(); ++i)
         {
-            // transform points through sensor model
+            // estimate observation for this sigma point
             auto smResult = sensorModel().estimateObservations(
                 sigmaA.points.col(i), observations);
             // if sigmaB was not initialized init it now

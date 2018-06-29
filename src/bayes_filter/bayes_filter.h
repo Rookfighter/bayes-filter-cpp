@@ -12,13 +12,14 @@
 
 namespace bf
 {
+    /** Struct representing a state estimate with mean and covariance */
     struct StateEstimate
     {
         Eigen::VectorXd state;
         Eigen::MatrixXd cov;
     };
 
-    /** base class for bayes filter implementations. */
+    /** Interface for bayes filter implementations. */
     class BayesFilter
     {
     private:

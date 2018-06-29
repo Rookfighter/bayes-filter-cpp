@@ -22,11 +22,14 @@ namespace bf
 
     void UnscentedTransform::setKappa(const double kappa)
     {
+        assert(kappa >= 0);
         kappa_ = kappa;
     }
 
     void UnscentedTransform::setAlpha(const double alpha)
     {
+        assert(alpha > 0);
+        assert(alpha <= 1);
         alpha_ = alpha;
     }
 
@@ -49,7 +52,8 @@ namespace bf
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
 
-        unsigned int n = state.size();
+        // keep track of dimension of a sigma point
+        size_t n = state.size();
         double nd = static_cast<double>(n);
         double lambda = calcLambda(n);
 
@@ -57,19 +61,27 @@ namespace bf
         result.points.resize(n, 2 * n + 1);
         result.weights.resize(2, 2 * n + 1);
 
+        // calculate sigma point distances to mean
+        // each column is a distance vector
         Eigen::MatrixXd sigmaOffset = ((nd + lambda) * cov).llt().matrixL();
 
+        // first sigma point is always just the mean
         result.points.col(0) = state;
+        // calc weight of first sigma point
         result.weights(0, 0) = lambda / (nd + lambda);
         result.weights(1, 0) = result.weights(0, 0) + (1 - alpha_ * alpha_ + beta_);
+
+        // all remeaining sigma point have the same constant weight
         double constWeight = 1.0 / (2.0 * (nd + lambda));
 
         for(unsigned int i = 0; i < n; ++i)
         {
+            // calculate sigma point in positive direction
             result.points.col(i + 1) = normalize(state + sigmaOffset.col(i));
             result.weights(0, i + 1) = constWeight;
             result.weights(1, i + 1) = constWeight;
 
+            // calculate sigma point in negative direction
             result.points.col(i + 1 + n) = normalize(state - sigmaOffset.col(i));
             result.weights(0, i + 1 + n) = constWeight;
             result.weights(1, i + 1 + n) = constWeight;
@@ -84,7 +96,9 @@ namespace bf
     {
         assert(sigma.points.cols() == sigma.weights.cols());
 
-        Eigen::VectorXd result = Eigen::VectorXd::Zero(sigma.points.rows());
+        Eigen::VectorXd result;
+        result.setZero(sigma.points.rows());
+
         for(unsigned int i = 0; i < sigma.points.cols(); ++i)
             result += sigma.weights(0, i) * sigma.points.col(i);
 
@@ -99,7 +113,9 @@ namespace bf
         assert(sigma.points.cols() == sigma.weights.cols());
         assert(sigma.points.rows() == mean.size());
 
-        Eigen::MatrixXd result = Eigen::MatrixXd::Zero(mean.size(), mean.size());
+        Eigen::MatrixXd result;
+        result.setZero(mean.size(), mean.size());
+
         for(unsigned int i = 0; i < sigma.points.cols(); ++i)
         {
             Eigen::VectorXd diff = normalize(sigma.points.col(i) - mean);
@@ -109,7 +125,7 @@ namespace bf
         return result;
     }
 
-    Eigen::MatrixXd UnscentedTransform::recoverCrossCovariance(
+    Eigen::MatrixXd UnscentedTransform::recoverCrossCorrelation(
         const SigmaPoints &sigmaA,
         const Eigen::VectorXd &meanA,
         const NormalizeFunc& normalizeA,
@@ -121,13 +137,14 @@ namespace bf
         assert(sigmaB.points.rows() == meanB.size());
         assert(sigmaA.points.cols() == sigmaB.points.cols());
 
-        Eigen::MatrixXd result = Eigen::MatrixXd::Zero(
-            meanA.size(),
-            meanB.size());
+        Eigen::MatrixXd result;
+        result.setZero(meanA.size(), meanB.size());
 
         for(unsigned int i = 0; i < sigmaA.points.cols(); ++i)
         {
+            // calculate normalized diff of A
             Eigen::VectorXd diffA = normalizeA(sigmaA.points.col(i) - meanA);
+            // calculate normalized diff of B
             Eigen::VectorXd diffB = normalizeB(sigmaB.points.col(i) - meanB);
             result += sigmaA.weights(1, i) * diffA * diffB.transpose();
         }
