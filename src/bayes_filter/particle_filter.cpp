@@ -47,10 +47,11 @@ namespace bf
 
         Eigen::VectorXd state = meanOfStates(states, weights);
         Eigen::MatrixXd cov(state.size(), state.size());
+        Eigen::VectorXd diff;
         for(unsigned int i = 0; i < particles_.size(); ++i)
         {
-            Eigen::VectorXd diff = particles_[i].state - state;
-            diff = normalizeState(diff);
+            diff = particles_[i].state - state;
+            normalizeState(diff);
             cov += particles_[i].weight * diff * diff.transpose();
         }
 
@@ -97,8 +98,9 @@ namespace bf
 
         for(unsigned int i = 0; i < state.size(); ++i)
             result(i) = distribs[i](rndgen_);
+        normalizeState(result);
 
-        return normalizeState(result);
+        return result;
     }
 
     void ParticleFilter::normalizeWeight()
@@ -188,7 +190,7 @@ namespace bf
             p.state.resize(state.size());
             for(unsigned int i = 0; i < state.size(); ++i)
                 p.state(i) = distribs[i](rndgen_);
-            p.state = normalizeState(p.state);
+            normalizeState(p.state);
         }
     }
 

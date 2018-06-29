@@ -73,16 +73,20 @@ namespace bf
 
         // all remeaining sigma point have the same constant weight
         double constWeight = 1.0 / (2.0 * (nd + lambda));
-
+        Eigen::VectorXd tmp;
         for(unsigned int i = 0; i < n; ++i)
         {
             // calculate sigma point in positive direction
-            result.points.col(i + 1) = normalize(state + sigmaOffset.col(i));
+            tmp = state + sigmaOffset.col(i);
+            normalize(tmp);
+            result.points.col(i + 1) = tmp;
             result.weights(0, i + 1) = constWeight;
             result.weights(1, i + 1) = constWeight;
 
             // calculate sigma point in negative direction
-            result.points.col(i + 1 + n) = normalize(state - sigmaOffset.col(i));
+            tmp = state - sigmaOffset.col(i);
+            normalize(tmp);
+            result.points.col(i + 1 + n) = tmp;
             result.weights(0, i + 1 + n) = constWeight;
             result.weights(1, i + 1 + n) = constWeight;
         }
@@ -92,17 +96,14 @@ namespace bf
 
     Eigen::VectorXd UnscentedTransform::recoverMean(
         const SigmaPoints &sigma,
-        const NormalizeFunc &normalize) const
+        const WeightedMeanFunc &mean) const
     {
+        assert(sigma.weights.rows() == 2);
         assert(sigma.points.cols() == sigma.weights.cols());
 
-        Eigen::VectorXd result;
-        result.setZero(sigma.points.rows());
+        Eigen::VectorXd weights = sigma.weights.row(0);
 
-        for(unsigned int i = 0; i < sigma.points.cols(); ++i)
-            result += sigma.weights(0, i) * sigma.points.col(i);
-
-        return normalize(result);
+        return mean(sigma.points, weights);
     }
 
     Eigen::MatrixXd UnscentedTransform::recoverCovariance(
@@ -116,9 +117,11 @@ namespace bf
         Eigen::MatrixXd result;
         result.setZero(mean.size(), mean.size());
 
+        Eigen::VectorXd diff;
         for(unsigned int i = 0; i < sigma.points.cols(); ++i)
         {
-            Eigen::VectorXd diff = normalize(sigma.points.col(i) - mean);
+             diff = sigma.points.col(i) - mean;
+             normalize(diff);
             result += sigma.weights(1, i) * diff * diff.transpose();
         }
 
@@ -143,9 +146,11 @@ namespace bf
         for(unsigned int i = 0; i < sigmaA.points.cols(); ++i)
         {
             // calculate normalized diff of A
-            Eigen::VectorXd diffA = normalizeA(sigmaA.points.col(i) - meanA);
+            Eigen::VectorXd diffA = sigmaA.points.col(i) - meanA;
+            normalizeA(diffA);
             // calculate normalized diff of B
-            Eigen::VectorXd diffB = normalizeB(sigmaB.points.col(i) - meanB);
+            Eigen::VectorXd diffB = sigmaB.points.col(i) - meanB;
+            normalizeB(diffB);
             result += sigmaA.weights(1, i) * diffA * diffB.transpose();
         }
 

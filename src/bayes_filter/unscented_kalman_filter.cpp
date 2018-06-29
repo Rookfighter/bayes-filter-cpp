@@ -60,10 +60,11 @@ namespace bf
             auto mmResult = motionModel().estimateState(
                                 sigma.points.col(i), controls, observations);
             // normalize resulting state
-            sigma.points.col(i) = normalizeState(mmResult.val);
+            normalizeState(mmResult.val);
+            sigma.points.col(i) = mmResult.val;
         }
 
-        auto mu = unscentTrans_.recoverMean(sigma, normState_);
+        auto mu = unscentTrans_.recoverMean(sigma, meanState_);
         auto cov = unscentTrans_.recoverCovariance(sigma, mu, normState_);
 
         // update current state estimate
@@ -106,12 +107,12 @@ namespace bf
                 sigmaB.points.resize(smResult.val.size(),
                                      sigmaA.points.cols());
             }
-            // normalize resulting observations
+            // reshape resulting observations
             sigmaB.points.col(i) = mat2vec(smResult.val);
 
         }
 
-        auto mu = unscentTrans_.recoverMean(sigmaB, normObs_);
+        auto mu = unscentTrans_.recoverMean(sigmaB, meanObs_);
         auto cov = unscentTrans_.recoverCovariance(sigmaB, mu, normObs_);
         auto crossCov = unscentTrans_.recoverCrossCorrelation(
                             sigmaA, state_, normState_,
@@ -128,7 +129,9 @@ namespace bf
         Eigen::MatrixXd kalGain = crossCov * cov.inverse();
 
         // correct current state estimate
-        state_ += kalGain * normObs_(obs - mu);
+        Eigen::MatrixXd diff = obs - mu;
+        normalizeObservations(diff);
+        state_ += kalGain * diff;
         cov_ -= kalGain * cov * kalGain.transpose();
     }
 }

@@ -26,7 +26,7 @@ namespace bf
     public:
         /** Function that normalizes the input vector and returns normalized
          *  version */
-        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)>
+        typedef std::function<void(Eigen::VectorXd &)>
             NormalizeFunc;
         /** Function that calculates the rowwise mean of the given matrix. Each
          *  column represents one sample / measurement / state. */
@@ -66,9 +66,8 @@ namespace bf
          *  @param normalize normalization function */
         void setNormalizeObservation(const NormalizeFunc &func);
 
-        Eigen::VectorXd normalizeState(const Eigen::VectorXd &state) const;
-        Eigen::VectorXd normalizeObservations(
-            const Eigen::MatrixXd &observations) const;
+        void normalizeState(Eigen::VectorXd &state) const;
+        void normalizeObservations(Eigen::MatrixXd &observations) const;
 
         void setMeanState(const WeightedMeanFunc &func);
         void setMeanObservation(const WeightedMeanFunc &func);

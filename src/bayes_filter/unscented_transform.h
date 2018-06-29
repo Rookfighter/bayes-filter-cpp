@@ -26,8 +26,11 @@ namespace bf
         double alpha_;
         double beta_;
     public:
-        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)>
-        NormalizeFunc;
+        typedef std::function<void(Eigen::VectorXd &)> NormalizeFunc;
+        /** Function that calculates the rowwise mean of the given matrix. Each
+         *  column represents one sample / measurement / state. */
+        typedef std::function<Eigen::VectorXd(const Eigen::MatrixXd &,
+            const Eigen::VectorXd &)> WeightedMeanFunc;
 
         struct Result
         {
@@ -75,7 +78,7 @@ namespace bf
          *  @param normalize normalization function for a sigma point
          *  @return mean of the sigma points, normalized */
         Eigen::VectorXd recoverMean(const SigmaPoints &sigma,
-                                    const NormalizeFunc &normalize) const;
+                                    const WeightedMeanFunc &mean) const;
 
         /** Recovers the covariance from sigma points.
          *  @param sigma sigma points

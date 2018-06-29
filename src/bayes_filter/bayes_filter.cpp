@@ -12,9 +12,9 @@ namespace ph = std::placeholders;
 
 namespace bf
 {
-    static Eigen::VectorXd noNormalize(const Eigen::VectorXd &v)
+    static void noNormalize(Eigen::VectorXd &)
     {
-        return v;
+
     }
 
     static Eigen::VectorXd rowwiseMean(const Eigen::MatrixXd &m,
@@ -93,19 +93,20 @@ namespace bf
         normObs_ = func;
     }
 
-    Eigen::VectorXd BayesFilter::normalizeState(
-        const Eigen::VectorXd &state) const
+    void BayesFilter::normalizeState(Eigen::VectorXd &state) const
     {
-        return normState_(state);
+        normState_(state);
     }
 
-    Eigen::VectorXd BayesFilter::normalizeObservations(
-        const Eigen::MatrixXd &observations) const
+    void BayesFilter::normalizeObservations(Eigen::MatrixXd &obs) const
     {
-        Eigen::MatrixXd result(observations.rows(), observations.cols());
-        for(unsigned int i = 0; i < result.cols(); ++i)
-            result.col(i) = normObs_(observations.col(i));
-        return result;
+        Eigen::VectorXd tmp(obs.rows());
+        for(unsigned int i = 0; i < obs.cols(); ++i)
+        {
+            tmp = obs.col(i);
+            normObs_(tmp);
+            obs.col(i) = tmp;
+        }
     }
 
     void BayesFilter::setMeanState(const WeightedMeanFunc &func)
