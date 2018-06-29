@@ -31,8 +31,8 @@ TEST_CASE("Unscented Kalman Filter")
         ukf.init(state, cov);
         auto result = ukf.getEstimate();
 
-        REQUIRE_MAT(state, result.first, eps);
-        REQUIRE_MAT(cov, result.second, eps);
+        REQUIRE_MAT(state, result.state, eps);
+        REQUIRE_MAT(cov, result.cov, eps);
     }
 
     SECTION("prediction step")
@@ -70,8 +70,8 @@ TEST_CASE("Unscented Kalman Filter")
                    1.0,   0, 1.1,   0,
                      0, 1.0,   0, 1.1;
 
-            REQUIRE_MAT(state, result.first, eps);
-            REQUIRE_MAT(cov, result.second, eps);
+            REQUIRE_MAT(state, result.state, eps);
+            REQUIRE_MAT(cov, result.cov, eps);
         }
 
     }

@@ -32,7 +32,8 @@ static Eigen::MatrixXd linearTransformCov(const Eigen::MatrixXd &cov, const Eige
 {
     assert(cov.rows() == facs.rows());
 
-    Eigen::MatrixXd result = Eigen::MatrixXd::Zero(cov.rows(), cov.cols());
+    Eigen::MatrixXd result;
+    result.setZero(cov.rows(), cov.cols());
     for(unsigned int i = 0; i < cov.rows(); ++i)
         result(i, i) = cov(i,i) * facs(i) * facs(i);
 
@@ -266,7 +267,7 @@ TEST_CASE("Unscented Transform")
                    0, 0, 1;
 
             auto sigma = trans.calcSigmaPoints(state, cov, normalize);
-            auto actCrossCov = trans.recoverCrossCovariance(
+            auto actCrossCov = trans.recoverCrossCorrelation(
                 sigma, state, normalize,
                 sigma, state, normalize);
 
@@ -292,7 +293,7 @@ TEST_CASE("Unscented Transform")
 
             auto sigma1 = trans.calcSigmaPoints(state1, cov, normalize);
             auto sigma2 = linearTransformSig(sigma1, facs);
-            auto actCrossCov = trans.recoverCrossCovariance(
+            auto actCrossCov = trans.recoverCrossCorrelation(
                 sigma1, state1, normalize,
                 sigma2, state2, normalize);
 
@@ -318,7 +319,7 @@ TEST_CASE("Unscented Transform")
 
             auto sigma1 = trans.calcSigmaPoints(state1, cov, normalize);
             auto sigma2 = linearTransformSig(sigma1, facs);
-            auto actCrossCov = trans.recoverCrossCovariance(
+            auto actCrossCov = trans.recoverCrossCorrelation(
                 sigma1, state1, normalize,
                 sigma2, state2, normalize);
 
