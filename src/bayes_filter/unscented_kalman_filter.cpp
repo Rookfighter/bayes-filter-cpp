@@ -48,8 +48,7 @@ namespace bf
         normObs_ = normalize;
     }
 
-    std::pair<Eigen::VectorXd, Eigen::MatrixXd> UnscentedKalmanFilter::getEstimate()
-    const
+    StateEstimate UnscentedKalmanFilter::getEstimate() const
     {
         return {state_, cov_};
     }

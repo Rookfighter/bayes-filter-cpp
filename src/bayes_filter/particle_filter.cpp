@@ -26,7 +26,7 @@ namespace bf
     {
     }
 
-    std::pair<Eigen::VectorXd, Eigen::MatrixXd> ParticleFilter::getEstimate() const
+    StateEstimate ParticleFilter::getEstimate() const
     {
         Eigen::VectorXd state = Eigen::VectorXd::Zero(particles_.front().state.size());
         for(const Particle &p : particles_)
@@ -67,7 +67,7 @@ namespace bf
         particles_.resize(cnt);
     }
 
-    const std::vector<Particle> &ParticleFilter::particles() const
+    const ParticleSet &ParticleFilter::particles() const
     {
         return particles_;
     }
@@ -124,7 +124,7 @@ namespace bf
 
     void ParticleFilter::resample()
     {
-        std::vector<Particle> result(particles_.size());
+        ParticleSet result(particles_.size());
 
         // calc step between each sample
         // assuming normalized weights (sum is 1.0)

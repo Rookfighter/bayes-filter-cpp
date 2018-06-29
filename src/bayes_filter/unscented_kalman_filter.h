@@ -44,7 +44,7 @@ namespace bf
         void setNormalizeState(const NormalizeFunc &normalize);
         void setNormalizeObservation(const NormalizeFunc &normalize);
 
-        std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEstimate() const override;
+        StateEstimate getEstimate() const override;
 
         void init(const Eigen::VectorXd &state,
                   const Eigen::MatrixXd &cov) override;

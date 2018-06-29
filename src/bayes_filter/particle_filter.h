@@ -20,11 +20,13 @@ namespace bf
         double weight;
     };
 
+    typedef std::vector<Particle> ParticleSet;
+
     /** Implementation of a Particle Filter.*/
     class ParticleFilter: public BayesFilter
     {
     private:
-        std::vector<Particle> particles_;
+        ParticleSet particles_;
         std::default_random_engine rndgen_;
 
         Eigen::VectorXd randomizeState(const Eigen::VectorXd &state,
@@ -42,9 +44,9 @@ namespace bf
         ~ParticleFilter();
 
         void setParticleCount(const unsigned int cnt);
-        const std::vector<Particle> &particles() const;
+        const ParticleSet &particles() const;
 
-        std::pair<Eigen::VectorXd, Eigen::MatrixXd> getEstimate() const override;
+        StateEstimate getEstimate() const override;
 
         /** Returns the most likely (highest weight) state estimate.
          *  @return most likely state estimate */
