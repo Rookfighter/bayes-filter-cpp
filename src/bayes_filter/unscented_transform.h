@@ -27,7 +27,7 @@ namespace bf
         double beta_;
     public:
         typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)>
-            NormalizeFunc;
+        NormalizeFunc;
 
         struct Result
         {
@@ -67,15 +67,15 @@ namespace bf
          *  @param cov covariance matrix, (state.size(), state.size()) dimensions
          *  @return set of sigma points and corresponding weights */
         SigmaPoints calcSigmaPoints(const Eigen::VectorXd &state,
-            const Eigen::MatrixXd &cov,
-            const NormalizeFunc &normalize) const;
+                                    const Eigen::MatrixXd &cov,
+                                    const NormalizeFunc &normalize) const;
 
         /** Recovers the mean value from sigma points.
          *  @param sigma sigma points
          *  @param normalize normalization function for a sigma point
          *  @return mean of the sigma points, normalized */
         Eigen::VectorXd recoverMean(const SigmaPoints &sigma,
-            const NormalizeFunc &normalize) const;
+                                    const NormalizeFunc &normalize) const;
 
         /** Recovers the covariance from sigma points.
          *  @param sigma sigma points

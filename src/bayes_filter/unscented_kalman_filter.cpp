@@ -26,7 +26,7 @@ namespace bf
     }
 
     UnscentedKalmanFilter::UnscentedKalmanFilter(MotionModel *mm,
-        SensorModel *sm)
+            SensorModel *sm)
         : BayesFilter(mm, sm),
           normState_(std::bind(noNormalize, _1)),
           normObs_(std::bind(noNormalize, _1))
@@ -57,7 +57,7 @@ namespace bf
     }
 
     void UnscentedKalmanFilter::init(const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &cov)
+                                     const Eigen::MatrixXd &cov)
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
@@ -67,8 +67,8 @@ namespace bf
     }
 
     void UnscentedKalmanFilter::predict(const Eigen::VectorXd &controls,
-        const Eigen::MatrixXd &observations,
-        const Eigen::MatrixXd &motionCov)
+                                        const Eigen::MatrixXd &observations,
+                                        const Eigen::MatrixXd &motionCov)
     {
         assert(state_.size() == motionCov.rows());
         assert(state_.size() == motionCov.cols());
@@ -94,7 +94,7 @@ namespace bf
     }
 
     void UnscentedKalmanFilter::correct(const Eigen::MatrixXd &observations,
-        const Eigen::MatrixXd &sensorCov)
+                                        const Eigen::MatrixXd &sensorCov)
     {
         // transform observation matrix into vector
         Eigen::VectorXd obs = mat2vec(observations);
@@ -126,7 +126,7 @@ namespace bf
             if(sigmaB.points.rows() < smResult.val.size())
             {
                 sigmaB.points.resize(smResult.val.size(),
-                    sigmaA.points.cols());
+                                     sigmaA.points.cols());
             }
             // normalize resulting observations
             auto tmp = mat2vec(smResult.val);
@@ -136,8 +136,8 @@ namespace bf
         auto mu = unscentTrans_.recoverMean(sigmaB, normObs_);
         auto cov = unscentTrans_.recoverCovariance(sigmaB, mu, normObs_);
         auto crossCov = unscentTrans_.recoverCrossCorrelation(
-            sigmaA, state_, normState_,
-            sigmaB, mu, normObs_);
+                            sigmaA, state_, normState_,
+                            sigmaB, mu, normObs_);
 
         assert(mu.size() == obs.size());
         assert(cov.rows() == obsCov.rows());

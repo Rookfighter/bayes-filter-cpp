@@ -46,8 +46,8 @@ namespace bf
     }
 
     inline Eigen::MatrixXd vec2mat(const Eigen::VectorXd &vec,
-        const unsigned int rows,
-        const unsigned int cols)
+                                   const unsigned int rows,
+                                   const unsigned int cols)
     {
         assert(rows * cols == vec.size());
         Eigen::MatrixXd result(rows, cols);

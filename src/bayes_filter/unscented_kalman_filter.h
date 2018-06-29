@@ -18,7 +18,7 @@ namespace bf
     {
     public:
         typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)>
-            NormalizeFunc;
+        NormalizeFunc;
     private:
         UnscentedTransform unscentTrans_;
 
@@ -54,12 +54,12 @@ namespace bf
         StateEstimate getEstimate() const override;
 
         void init(const Eigen::VectorXd &state,
-            const Eigen::MatrixXd &cov) override;
+                  const Eigen::MatrixXd &cov) override;
         void predict(const Eigen::VectorXd &controls,
-            const Eigen::MatrixXd &observations,
-            const Eigen::MatrixXd &motionCov) override;
+                     const Eigen::MatrixXd &observations,
+                     const Eigen::MatrixXd &motionCov) override;
         void correct(const Eigen::MatrixXd &observations,
-            const Eigen::MatrixXd &sensorCov) override;
+                     const Eigen::MatrixXd &sensorCov) override;
     };
 }
 
