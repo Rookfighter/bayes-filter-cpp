@@ -30,18 +30,18 @@ namespace bf
             NormalizeFunc;
         /** Function that calculates the rowwise mean of the given matrix. Each
          *  column represents one sample / measurement / state. */
-        typedef std::function<Eigen::VectorXd(const Eigen::MatrixXd &)>
-            MeanFunc;
+        typedef std::function<Eigen::VectorXd(const Eigen::MatrixXd &,
+            const Eigen::VectorXd &)> WeightedMeanFunc;
 
-    private:
+    protected:
         MotionModel *motionModel_;
         SensorModel *sensorModel_;
 
         NormalizeFunc normState_;
         NormalizeFunc normObs_;
 
-        MeanFunc meanState_;
-        MeanFunc meanObs_;
+        WeightedMeanFunc meanState_;
+        WeightedMeanFunc meanObs_;
 
     public:
 
@@ -58,18 +58,27 @@ namespace bf
         SensorModel &sensorModel();
         const SensorModel &sensorModel() const;
 
+        /** Set the normalization function for state vectors.
+         *  @param normalize normalization function */
         void setNormalizeState(const NormalizeFunc &func);
+
+        /** Set the normalization function for observation matrices.
+         *  @param normalize normalization function */
         void setNormalizeObservation(const NormalizeFunc &func);
 
         Eigen::VectorXd normalizeState(const Eigen::VectorXd &state) const;
         Eigen::VectorXd normalizeObservations(
             const Eigen::MatrixXd &observations) const;
 
-        void setMeanState(const MeanFunc &func);
-        void setMeanObservation(const MeanFunc &func);
+        void setMeanState(const WeightedMeanFunc &func);
+        void setMeanObservation(const WeightedMeanFunc &func);
 
-        Eigen::VectorXd meanOfStates(const Eigen::MatrixXd &states) const;
-        Eigen::VectorXd meanOfObservations(const Eigen::MatrixXd &observations) const;
+        Eigen::VectorXd meanOfStates(
+            const Eigen::MatrixXd &states,
+            const Eigen::VectorXd &weights) const;
+        Eigen::VectorXd meanOfObservations(
+            const Eigen::MatrixXd &observations,
+            const Eigen::VectorXd &weights) const;
 
 
         /** Return the current estimated state vector of the filter and its

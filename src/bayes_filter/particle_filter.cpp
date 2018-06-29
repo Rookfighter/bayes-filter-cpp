@@ -26,26 +26,31 @@ namespace bf
     {
     }
 
+    void ParticleFilter::setSeed(const size_t seed)
+    {
+        rndgen_.seed(seed);
+    }
+
     StateEstimate ParticleFilter::getEstimate() const
     {
-        Eigen::VectorXd state;
-        state.setZero(particles_.front().state.size());
-        for(const Particle &p : particles_)
-            state += p.weight * p.state;
+        assert(particles_.size() > 0);
 
-        Eigen::Vector2d ang(0, 0);
-        for(const Particle &p : particles_)
+        Eigen::MatrixXd states(particles_.front().state.size(),
+            particles_.size());
+        Eigen::VectorXd weights(particles_.size());
+
+        for(unsigned int i = 0; i < states.cols(); ++i)
         {
-            ang << ang(0) + p.weight *std::cos(p.state(3)),
-                ang(1) + p.weight *std::sin(p.state(3));
+            states.col(i) = particles_[i].state;
+            weights(i) = particles_[i].weight;
         }
-        state(3) = std::atan2(ang(1), ang(0));
 
-        Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(state.size(),
-                              state.size());
+        Eigen::VectorXd state = meanOfStates(states, weights);
+        Eigen::MatrixXd cov(state.size(), state.size());
         for(unsigned int i = 0; i < particles_.size(); ++i)
         {
             Eigen::VectorXd diff = particles_[i].state - state;
+            diff = normalizeState(diff);
             cov += particles_[i].weight * diff * diff.transpose();
         }
 
@@ -93,7 +98,7 @@ namespace bf
         for(unsigned int i = 0; i < state.size(); ++i)
             result(i) = distribs[i](rndgen_);
 
-        return result;
+        return normalizeState(result);
     }
 
     void ParticleFilter::normalizeWeight()
@@ -183,6 +188,7 @@ namespace bf
             p.state.resize(state.size());
             for(unsigned int i = 0; i < state.size(); ++i)
                 p.state(i) = distribs[i](rndgen_);
+            p.state = normalizeState(p.state);
         }
     }
 
@@ -195,9 +201,8 @@ namespace bf
 
         for(Particle &p : particles_)
         {
-            p.state = motionModel().estimateState(p.state,
-                                                  controls,
-                                                  observations).val;
+            p.state = motionModel().estimateState(
+                p.state, controls, observations).val;
             p.state = randomizeState(p.state, motionCov);
         }
     }

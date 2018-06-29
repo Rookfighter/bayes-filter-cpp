@@ -16,14 +16,8 @@ namespace bf
     /** Implementation of a Unscented Kalman Filter.*/
     class UnscentedKalmanFilter: public BayesFilter
     {
-    public:
-        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)>
-        NormalizeFunc;
     private:
         UnscentedTransform unscentTrans_;
-
-        NormalizeFunc normState_;
-        NormalizeFunc normObs_;
 
         Eigen::VectorXd state_;
         Eigen::MatrixXd cov_;
@@ -42,14 +36,6 @@ namespace bf
         UnscentedKalmanFilter();
         UnscentedKalmanFilter(MotionModel *mm, SensorModel *sm);
         ~UnscentedKalmanFilter();
-
-        /** Set the normalization function for state vectors.
-         *  @param normalize normalization function */
-        void setNormalizeState(const NormalizeFunc &normalize);
-
-        /** Set the normalization function for observation vectors.
-         *  @param normalize normalization function */
-        void setNormalizeObservation(const NormalizeFunc &normalize);
 
         StateEstimate getEstimate() const override;
 

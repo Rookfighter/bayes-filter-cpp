@@ -43,6 +43,7 @@ namespace bf
         ParticleFilter(MotionModel *mm, SensorModel *sm);
         ~ParticleFilter();
 
+        void setSeed(const size_t seed);
         void setParticleCount(const unsigned int cnt);
         const ParticleSet &particles() const;
 

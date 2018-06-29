@@ -8,28 +8,18 @@
 #include "bayes_filter/unscented_kalman_filter.h"
 #include "bayes_filter/math.h"
 
-using namespace std::placeholders;
-
 namespace bf
 {
-    static Eigen::VectorXd noNormalize(const Eigen::VectorXd &v)
-    {
-        return v;
-    }
 
     UnscentedKalmanFilter::UnscentedKalmanFilter()
-        : BayesFilter(), unscentTrans_(),
-          normState_(std::bind(noNormalize, _1)),
-          normObs_(std::bind(noNormalize, _1))
+        : BayesFilter(), unscentTrans_()
     {
 
     }
 
     UnscentedKalmanFilter::UnscentedKalmanFilter(MotionModel *mm,
             SensorModel *sm)
-        : BayesFilter(mm, sm),
-          normState_(std::bind(noNormalize, _1)),
-          normObs_(std::bind(noNormalize, _1))
+        : BayesFilter(mm, sm), unscentTrans_()
     {
 
     }
@@ -37,18 +27,6 @@ namespace bf
     UnscentedKalmanFilter::~UnscentedKalmanFilter()
     {
 
-    }
-
-    void UnscentedKalmanFilter::setNormalizeState(
-        const NormalizeFunc &normalize)
-    {
-        normState_ = normalize;
-    }
-
-    void UnscentedKalmanFilter::setNormalizeObservation(
-        const NormalizeFunc &normalize)
-    {
-        normObs_ = normalize;
     }
 
     StateEstimate UnscentedKalmanFilter::getEstimate() const
@@ -82,7 +60,7 @@ namespace bf
             auto mmResult = motionModel().estimateState(
                                 sigma.points.col(i), controls, observations);
             // normalize resulting state
-            sigma.points.col(i) = normState_(mmResult.val);
+            sigma.points.col(i) = normalizeState(mmResult.val);
         }
 
         auto mu = unscentTrans_.recoverMean(sigma, normState_);
@@ -121,7 +99,7 @@ namespace bf
         {
             // estimate observation for this sigma point
             auto smResult = sensorModel().estimateObservations(
-                                sigmaA.points.col(i), observations);
+                sigmaA.points.col(i), observations);
             // if sigmaB was not initialized init it now
             if(sigmaB.points.rows() < smResult.val.size())
             {
@@ -129,8 +107,8 @@ namespace bf
                                      sigmaA.points.cols());
             }
             // normalize resulting observations
-            auto tmp = mat2vec(smResult.val);
-            sigmaB.points.col(i) = normObs_(tmp);
+            sigmaB.points.col(i) = mat2vec(smResult.val);
+
         }
 
         auto mu = unscentTrans_.recoverMean(sigmaB, normObs_);

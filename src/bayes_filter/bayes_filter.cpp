@@ -17,9 +17,17 @@ namespace bf
         return v;
     }
 
-    static Eigen::VectorXd rowwiseMean(const Eigen::MatrixXd &m)
+    static Eigen::VectorXd rowwiseMean(const Eigen::MatrixXd &m,
+        const Eigen::VectorXd &w)
     {
-        return m.rowwise().mean();
+        assert(m.cols() == w.size());
+
+        Eigen::VectorXd result;
+        result.setZero(m.rows());
+        for(unsigned int i = 0; i < m.cols(); ++i)
+            result += w(i) * m.col(i);
+
+        return result;
     }
 
     BayesFilter::BayesFilter()
@@ -32,8 +40,8 @@ namespace bf
         : motionModel_(mm), sensorModel_(sm),
         normState_(std::bind(noNormalize, ph::_1)),
         normObs_(std::bind(noNormalize, ph::_1)),
-        meanState_(std::bind(rowwiseMean, ph::_1)),
-        meanObs_(std::bind(rowwiseMean, ph::_1))
+        meanState_(std::bind(rowwiseMean, ph::_1, ph::_2)),
+        meanObs_(std::bind(rowwiseMean, ph::_1, ph::_2))
     {
     }
 
@@ -100,26 +108,30 @@ namespace bf
         return result;
     }
 
-    void BayesFilter::setMeanState(const MeanFunc &func)
+    void BayesFilter::setMeanState(const WeightedMeanFunc &func)
     {
         meanState_ = func;
     }
 
-    void BayesFilter::setMeanObservation(const MeanFunc &func)
+    void BayesFilter::setMeanObservation(const WeightedMeanFunc &func)
     {
         meanObs_ = func;
     }
 
     Eigen::VectorXd BayesFilter::meanOfStates(
-        const Eigen::MatrixXd &states) const
+        const Eigen::MatrixXd &states,
+        const Eigen::VectorXd &weights) const
     {
-        return meanState_(states);
+        assert(states.cols() == weights.size());
+        return meanState_(states, weights);
     }
 
     Eigen::VectorXd BayesFilter::meanOfObservations(
-        const Eigen::MatrixXd &observations) const
+        const Eigen::MatrixXd &observations,
+        const Eigen::VectorXd &weights) const
     {
-        return meanObs_(observations);
+        assert(observations.cols() == weights.size());
+        return meanObs_(observations, weights);
     }
 
     void BayesFilter::update(const Eigen::VectorXd &controls,
