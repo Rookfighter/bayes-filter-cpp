@@ -28,7 +28,8 @@ namespace bf
 
     StateEstimate ParticleFilter::getEstimate() const
     {
-        Eigen::VectorXd state = Eigen::VectorXd::Zero(particles_.front().state.size());
+        Eigen::VectorXd state;
+        state.setZero(particles_.front().state.size());
         for(const Particle &p : particles_)
             state += p.weight * p.state;
 
@@ -40,7 +41,8 @@ namespace bf
         }
         state(3) = std::atan2(ang(1), ang(0));
 
-        Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(state.size(), state.size());
+        Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(state.size(),
+            state.size());
         for(unsigned int i = 0; i < particles_.size(); ++i)
         {
             Eigen::VectorXd diff = particles_[i].state - state;
@@ -83,7 +85,10 @@ namespace bf
 
         std::vector<std::normal_distribution<double>> distribs(state.size());
         for(unsigned int i = 0; i < state.size(); ++i)
-            distribs[i] = std::normal_distribution<double>(state(i), cov(i, i));
+        {
+            distribs[i] = std::normal_distribution<double>(state(i),
+                cov(i, i));
+        }
 
         for(unsigned int i = 0; i < state.size(); ++i)
             result(i) = distribs[i](rndgen_);
@@ -160,14 +165,17 @@ namespace bf
     }
 
     void ParticleFilter::init(const Eigen::VectorXd &state,
-                              const Eigen::MatrixXd &cov)
+        const Eigen::MatrixXd &cov)
     {
         assert(state.size() == cov.cols());
         assert(state.size() == cov.rows());
 
         std::vector<std::normal_distribution<double>> distribs(state.size());
         for(unsigned int i = 0; i < state.size(); ++i)
-            distribs[i] = std::normal_distribution<double>(state(i), cov(i, i));
+        {
+            distribs[i] = std::normal_distribution<double>(state(i),
+                cov(i, i));
+        }
 
         for(Particle &p : particles_)
         {
@@ -179,8 +187,8 @@ namespace bf
     }
 
     void ParticleFilter::predict(const Eigen::VectorXd &controls,
-                                 const Eigen::MatrixXd &observations,
-                                 const Eigen::MatrixXd &motionCov)
+        const Eigen::MatrixXd &observations,
+        const Eigen::MatrixXd &motionCov)
     {
         assert(particles_.front().state.size() == motionCov.rows());
         assert(particles_.front().state.size() == motionCov.cols());
@@ -195,12 +203,15 @@ namespace bf
     }
 
     void ParticleFilter::correct(const Eigen::MatrixXd &observations,
-                                 const Eigen::MatrixXd &sensorCov)
+        const Eigen::MatrixXd &sensorCov)
     {
         assert(sensorCov.size() > 0);
 
         for(Particle &p : particles_)
-            p.weight = sensorModel().likelihood(p.state, observations, sensorCov);
+        {
+            p.weight = sensorModel().likelihood(p.state, observations,
+                sensorCov);
+        }
 
         normalizeWeight();
         if(effectiveParticles() <= particles_.size() / 2)

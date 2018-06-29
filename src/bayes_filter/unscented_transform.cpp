@@ -47,7 +47,7 @@ namespace bf
     SigmaPoints UnscentedTransform::calcSigmaPoints(
         const Eigen::VectorXd &state,
         const Eigen::MatrixXd &cov,
-        const NormalizeFunc& normalize) const
+        const NormalizeFunc &normalize) const
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
@@ -92,7 +92,7 @@ namespace bf
 
     Eigen::VectorXd UnscentedTransform::recoverMean(
         const SigmaPoints &sigma,
-        const NormalizeFunc& normalize) const
+        const NormalizeFunc &normalize) const
     {
         assert(sigma.points.cols() == sigma.weights.cols());
 
@@ -108,7 +108,7 @@ namespace bf
     Eigen::MatrixXd UnscentedTransform::recoverCovariance(
         const SigmaPoints &sigma,
         const Eigen::VectorXd &mean,
-        const NormalizeFunc& normalize) const
+        const NormalizeFunc &normalize) const
     {
         assert(sigma.points.cols() == sigma.weights.cols());
         assert(sigma.points.rows() == mean.size());
@@ -128,10 +128,10 @@ namespace bf
     Eigen::MatrixXd UnscentedTransform::recoverCrossCorrelation(
         const SigmaPoints &sigmaA,
         const Eigen::VectorXd &meanA,
-        const NormalizeFunc& normalizeA,
+        const NormalizeFunc &normalizeA,
         const SigmaPoints &sigmaB,
         const Eigen::VectorXd &meanB,
-        const NormalizeFunc& normalizeB) const
+        const NormalizeFunc &normalizeB) const
     {
         assert(sigmaA.points.rows() == meanA.size());
         assert(sigmaB.points.rows() == meanB.size());

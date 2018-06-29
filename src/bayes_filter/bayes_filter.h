@@ -86,32 +86,35 @@ namespace bf
          *  @param state initial state vector of size Nx1
          *  @param cov initial covariance of size NxN*/
         virtual void init(const Eigen::VectorXd &state,
-                          const Eigen::MatrixXd &cov) = 0;
+            const Eigen::MatrixXd &cov) = 0;
 
         /** Execute prediction step of the bayes filter with the motion model.
          *  @param controls control vector
-         *  @param observations observation matrix, each column is one observation
+         *  @param observations observation matrix, each column is one
+         *         observation
          *  @param noise noise matrix of the motion model of size NxN */
         virtual void predict(const Eigen::VectorXd &controls,
-                             const Eigen::MatrixXd &observations,
-                             const Eigen::MatrixXd &noise) = 0;
+            const Eigen::MatrixXd &observations,
+            const Eigen::MatrixXd &noise) = 0;
 
         /** Execute correction step of the bayes filter with the sensor model.
-         *  @param observations observation matrix, each column is one observation of the length M
+         *  @param observations observation matrix, each column is one
+         *         observation of the length M
          *  @param noise noise matrix of the sensor model of size MxM */
         virtual void correct(const Eigen::MatrixXd &observations,
-                             const Eigen::MatrixXd &noise) = 0;
+            const Eigen::MatrixXd &noise) = 0;
 
         /** Update the filter by one discrete timestep, which runs prediction
          *  and correction step.
          *  @param controls control vector
-         *  @param observations observation matrix, each column is one observation of the length M
+         *  @param observations observation matrix, each column is one
+         *         observation of the length M
          *  @param motionCov noise matrix of the motion model of size NxN
          *  @param sensorCov noise matrix of the sensor model of size MxM */
         void update(const Eigen::VectorXd &controls,
-                    const Eigen::MatrixXd &observations,
-                    const Eigen::MatrixXd &motionCov,
-                    const Eigen::MatrixXd &sensorCov)
+            const Eigen::MatrixXd &observations,
+            const Eigen::MatrixXd &motionCov,
+            const Eigen::MatrixXd &sensorCov)
         {
             predict(controls, observations, motionCov);
             correct(observations, sensorCov);

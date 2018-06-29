@@ -30,7 +30,7 @@ namespace bf
         std::default_random_engine rndgen_;
 
         Eigen::VectorXd randomizeState(const Eigen::VectorXd &state,
-                                       const Eigen::MatrixXd &cov);
+            const Eigen::MatrixXd &cov);
         void normalizeWeight();
 
         /** Calculates the number of effective particles as: 1 / sum(weight^2).
@@ -53,12 +53,12 @@ namespace bf
         Eigen::VectorXd getMostLikely() const;
 
         void init(const Eigen::VectorXd &state,
-                  const Eigen::MatrixXd &cov) override;
+            const Eigen::MatrixXd &cov) override;
         void predict(const Eigen::VectorXd &controls,
-                     const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &motionCov) override;
+            const Eigen::MatrixXd &observations,
+            const Eigen::MatrixXd &motionCov) override;
         void correct(const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &sensorCov) override;
+            const Eigen::MatrixXd &sensorCov) override;
     };
 }
 

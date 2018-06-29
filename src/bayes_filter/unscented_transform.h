@@ -26,7 +26,8 @@ namespace bf
         double alpha_;
         double beta_;
     public:
-        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)> NormalizeFunc;
+        typedef std::function<Eigen::VectorXd(const Eigen::VectorXd &)>
+            NormalizeFunc;
 
         struct Result
         {
@@ -84,7 +85,7 @@ namespace bf
         Eigen::MatrixXd recoverCovariance(
             const SigmaPoints &sigma,
             const Eigen::VectorXd &mean,
-            const NormalizeFunc& normalize) const;
+            const NormalizeFunc &normalize) const;
 
         /** Calculates the cross correlation between two sets of sigma points.
          *  The resulting matrix is of dimension nA x nB.
@@ -100,10 +101,10 @@ namespace bf
         Eigen::MatrixXd recoverCrossCorrelation(
             const SigmaPoints &sigmaA,
             const Eigen::VectorXd &meanA,
-            const NormalizeFunc& normalizeA,
+            const NormalizeFunc &normalizeA,
             const SigmaPoints &sigmaB,
             const Eigen::VectorXd &meanB,
-            const NormalizeFunc& normalizeB) const;
+            const NormalizeFunc &normalizeB) const;
     };
 }
 
