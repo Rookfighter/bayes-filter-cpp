@@ -63,6 +63,35 @@ namespace bf
 
         return result;
     }
+
+    inline Eigen::MatrixXd diagMat(const Eigen::MatrixXd &mat,
+                                   const unsigned int times)
+    {
+        unsigned int rows = times * mat.rows();
+        unsigned int cols = times * mat.cols();
+        
+        Eigen::MatrixXd result;
+        result.setZero(rows, cols);
+
+        for(unsigned int m = 0; m * mat.cols() < cols && m * mat.rows() < rows; ++m)
+        {
+            for(unsigned int col = 0; col < mat.cols(); ++col)
+            {
+                unsigned int c = m * mat.cols() + col;
+                if(c >= cols)
+                    break;
+                for(unsigned int row = 0; row < mat.rows(); ++row)
+                {
+                    unsigned int r = m * mat.rows() + row;
+                    if(r >= rows)
+                        break;
+                    result(r, c) = mat(row, col);
+                }
+            }
+        }
+
+        return result;
+    }
 }
 
 #endif
