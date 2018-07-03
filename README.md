@@ -5,7 +5,7 @@ filter implementations, such as
 
 * Particle Filter
 * Unscented Kalman Filter
-* ~Extended Kalman Filter~ TBD
+* Extended Kalman Filter
 
 ## Install
 
