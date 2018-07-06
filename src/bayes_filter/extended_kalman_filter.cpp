@@ -5,7 +5,6 @@
  *      Author: Fabian Meyer
  */
 
-
 #include "bayes_filter/extended_kalman_filter.h"
 #include "bayes_filter/math.h"
 
@@ -50,6 +49,10 @@ namespace bf
          auto result = motionModel().estimateState(state_, controls,
              observations);
 
+         assert(result.val.size() == state_.size());
+         assert(result.jac.rows() == state_.size());
+         assert(result.jac.cols() == state_.size());
+
          state_ = result.val;
          cov_ = result.jac * cov_ * result.jac.transpose() + noise * noise.transpose();
      }
@@ -59,7 +62,16 @@ namespace bf
         assert(noise.rows() == observations.rows());
         assert(noise.cols() == observations.rows());
 
+        // if there are no observations, simply return
+        if(observations.cols() == 0)
+            return;
+
         auto result = sensorModel().estimateObservations(state_, observations);
+
+        assert(result.val.rows() == observations.rows());
+        assert(result.val.cols() == observations.cols());
+        assert(result.jac.rows() == observations.size());
+        assert(result.jac.cols() == state_.size());
 
         // square noise to retrieve covariance
         Eigen::MatrixXd sensorCov = noise * noise.transpose();

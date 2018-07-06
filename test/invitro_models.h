@@ -39,12 +39,12 @@ public:
     {}
 
     Result estimateObservations(
-        const Eigen::VectorXd &,
+        const Eigen::VectorXd &state,
         const Eigen::MatrixXd &observations) const override
     {
         Result result;
         result.val = observations;
-        result.jac = Eigen::MatrixXd::Identity(observations.size(), observations.size());
+        result.jac = Eigen::MatrixXd::Identity(observations.size(), state.size());
 
         return result;
     }
