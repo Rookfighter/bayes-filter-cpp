@@ -78,7 +78,7 @@ TEST_CASE("Unscented Kalman Filter")
 
     SECTION("correction step")
     {
-        // const double eps = 1e-6;
+        const double eps = 1e-6;
         UnscentedKalmanFilter ukf(
             new ConstVelMotionModel(),
             new IdentitySensorModel());
@@ -88,7 +88,6 @@ TEST_CASE("Unscented Kalman Filter")
 
        SECTION("with regular input")
        {
-
             Eigen::VectorXd state(4);
             state << 0, 0, 0.5, 0.5;
             Eigen::MatrixXd cov(4, 4);
@@ -105,14 +104,14 @@ TEST_CASE("Unscented Kalman Filter")
 
             auto result = ukf.getEstimate();
 
-            state << 0.5, 0.5, 0.5, 0.5;
-            cov << 3.1,   0, 1.0,   0,
-                     0, 3.1,   0, 1.0,
-                   1.0,   0, 1.1,   0,
-                     0, 1.0,   0, 1.1;
+            state << 0, 0, 0.5, 0.5;
+            cov << 2, 0, 0, 0,
+                   0, 2, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 1;
 
-            // REQUIRE_MAT(state, result.first, eps);
-            // REQUIRE_MAT(cov, result.second, eps);
+            REQUIRE_MAT(state, result.state, eps);
+            REQUIRE_MAT(cov, result.cov, eps);
         }
 
         SECTION("with empty observations")
@@ -130,14 +129,14 @@ TEST_CASE("Unscented Kalman Filter")
 
             auto result = ukf.getEstimate();
 
-            state << 0.5, 0.5, 0.5, 0.5;
-            cov << 3.1,   0, 1.0,   0,
-                     0, 3.1,   0, 1.0,
-                   1.0,   0, 1.1,   0,
-                     0, 1.0,   0, 1.1;
+            state << 0, 0, 0.5, 0.5;
+            cov << 2, 0, 0, 0,
+                   0, 2, 0, 0,
+                   0, 0, 1, 0,
+                   0, 0, 0, 1;
 
-            // REQUIRE_MAT(state, result.first, eps);
-            // REQUIRE_MAT(cov, result.second, eps);
+            REQUIRE_MAT(state, result.state, eps);
+            REQUIRE_MAT(cov, result.cov, eps);
         }
     }
 }

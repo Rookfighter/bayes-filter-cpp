@@ -75,11 +75,14 @@ namespace bf
     void UnscentedKalmanFilter::correct(const Eigen::MatrixXd &observations,
                                         const Eigen::MatrixXd &noise)
     {
-        // transform observation matrix into vector
-        Eigen::VectorXd obs = mat2vec(observations);
-
         assert(noise.rows() == noise.cols());
         assert(noise.rows() == observations.rows());
+
+        if(observations.cols() == 0)
+            return;
+
+        // transform observation matrix into vector
+        Eigen::VectorXd obs = mat2vec(observations);
 
         // reshape noise (=single measurement stddev on main diagonal) into
         // covariance matrix for all received observations
