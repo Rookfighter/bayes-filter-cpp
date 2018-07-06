@@ -121,8 +121,8 @@ namespace bf
                             sigmaB, mu, normObs_);
 
         assert(mu.size() == obs.size());
-        assert(cov.rows() == noise.rows());
-        assert(cov.cols() == noise.cols());
+        assert(cov.rows() == obsCov.rows());
+        assert(cov.cols() == obsCov.cols());
         assert(crossCov.rows() == state_.size());
         assert(crossCov.cols() == mu.size());
 

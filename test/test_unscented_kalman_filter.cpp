@@ -65,10 +65,10 @@ TEST_CASE("Unscented Kalman Filter")
             auto result = ukf.getEstimate();
 
             state << 0.5, 0.5, 0.5, 0.5;
-            cov << 3.1,   0, 1.0,   0,
-                     0, 3.1,   0, 1.0,
-                   1.0,   0, 1.1,   0,
-                     0, 1.0,   0, 1.1;
+            cov << 3.01,   0, 1.0,   0,
+                     0, 3.01,   0, 1.0,
+                   1.0,   0, 1.01,   0,
+                     0, 1.0,   0, 1.01;
 
             REQUIRE_MAT(state, result.state, eps);
             REQUIRE_MAT(cov, result.cov, eps);
@@ -126,7 +126,7 @@ TEST_CASE("Unscented Kalman Filter")
                    0, 0, 0, 1;
 
             ukf.init(state, cov);
-            ukf.correct(Eigen::MatrixXd(), noise);
+            ukf.correct(Eigen::MatrixXd(2,0), noise);
 
             auto result = ukf.getEstimate();
 
