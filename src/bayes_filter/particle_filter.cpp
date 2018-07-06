@@ -177,17 +177,19 @@ namespace bf
     {
         assert(state.size() == cov.cols());
         assert(state.size() == cov.rows());
+        assert(particles_.size() > 0);
 
         std::vector<std::normal_distribution<double>> distribs(state.size());
         for(unsigned int i = 0; i < state.size(); ++i)
         {
             distribs[i] = std::normal_distribution<double>(state(i),
-                          cov(i, i));
+                          std::sqrt(cov(i, i)));
         }
 
+        double weight = 1.0 / static_cast<double>(particles_.size());
         for(Particle &p : particles_)
         {
-            p.weight = 0;
+            p.weight = weight;
             p.state.resize(state.size());
             for(unsigned int i = 0; i < state.size(); ++i)
                 p.state(i) = distribs[i](rndgen_);
