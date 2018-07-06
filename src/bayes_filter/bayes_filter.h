@@ -112,12 +112,14 @@ namespace bf
          *  @param controls control vector
          *  @param observations observation matrix, each column is one
          *         observation of the length M
-         *  @param motionCov noise matrix of the motion model of size NxN
-         *  @param sensorCov noise matrix of the sensor model of size MxM */
+         *  @param motionNoise noise matrix (sqrt of covariance) of the motion
+         *         model of size NxN
+         *  @param sensorNoise noise matrix (sqrt of the covariance) of the
+         *         sensor model of size MxM */
         void update(const Eigen::VectorXd &controls,
                     const Eigen::MatrixXd &observations,
-                    const Eigen::MatrixXd &motionCov,
-                    const Eigen::MatrixXd &sensorCov);
+                    const Eigen::MatrixXd &motionNoise,
+                    const Eigen::MatrixXd &sensorNoise);
     };
 
 

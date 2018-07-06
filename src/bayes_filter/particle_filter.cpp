@@ -82,10 +82,11 @@ namespace bf
 
     Eigen::VectorXd ParticleFilter::randomizeState(
         const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &cov)
+        const Eigen::MatrixXd &noise)
     {
-        assert(state.size() == cov.cols());
-        assert(state.size() == cov.rows());
+        // noise matrix main diagonal holds stddev not variance!
+        assert(state.size() == noise.cols());
+        assert(state.size() == noise.rows());
 
         Eigen::VectorXd result(state.size());
 
@@ -93,7 +94,7 @@ namespace bf
         for(unsigned int i = 0; i < state.size(); ++i)
         {
             distribs[i] = std::normal_distribution<double>(state(i),
-                          cov(i, i));
+                          noise(i, i));
         }
 
         for(unsigned int i = 0; i < state.size(); ++i)
@@ -196,16 +197,16 @@ namespace bf
 
     void ParticleFilter::predict(const Eigen::VectorXd &controls,
                                  const Eigen::MatrixXd &observations,
-                                 const Eigen::MatrixXd &motionCov)
+                                 const Eigen::MatrixXd &noise)
     {
-        assert(particles_.front().state.size() == motionCov.rows());
-        assert(particles_.front().state.size() == motionCov.cols());
+        assert(particles_.front().state.size() == noise.rows());
+        assert(particles_.front().state.size() == noise.cols());
 
         for(Particle &p : particles_)
         {
             p.state = motionModel().estimateState(
                 p.state, controls, observations).val;
-            p.state = randomizeState(p.state, motionCov);
+            p.state = randomizeState(p.state, noise);
         }
     }
 

@@ -43,9 +43,9 @@ namespace bf
                   const Eigen::MatrixXd &cov) override;
         void predict(const Eigen::VectorXd &controls,
                      const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &motionCov) override;
+                     const Eigen::MatrixXd &noise) override;
         void correct(const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &sensorCov) override;
+                     const Eigen::MatrixXd &noise) override;
     };
 }
 

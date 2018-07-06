@@ -64,12 +64,12 @@ namespace bf
         /** Calculates the likelihood of p(z|x).
          *  @param pose current pose estimate
          *  @param observations matrix of observations
-         *  @param sensorCov uncertainty of observations
+         *  @param noise uncertainty of observations (sqrt of covariance)
          *  @return probability of these observations given the state
          */
         virtual double likelihood(const Eigen::VectorXd &state,
                                   const Eigen::MatrixXd &observations,
-                                  const Eigen::MatrixXd &sensorCov) const = 0;
+                                  const Eigen::MatrixXd &noise) const = 0;
     };
 }
 

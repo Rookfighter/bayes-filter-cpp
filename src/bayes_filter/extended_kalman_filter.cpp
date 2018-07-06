@@ -42,22 +42,31 @@ namespace bf
 
     void ExtendedKalmanFilter::predict(const Eigen::VectorXd &controls,
         const Eigen::MatrixXd &observations,
-        const Eigen::MatrixXd &motionCov)
+        const Eigen::MatrixXd &noise)
      {
+         assert(noise.cols() == cov_.cols());
+         assert(noise.rows() == cov_.rows());
+
          auto result = motionModel().estimateState(state_, controls,
              observations);
 
          state_ = result.val;
-         cov_ = result.jac * cov_ * result.jac.transpose() + motionCov;
+         cov_ = result.jac * cov_ * result.jac.transpose() + noise * noise.transpose();
      }
     void ExtendedKalmanFilter::correct(const Eigen::MatrixXd &observations,
-        const Eigen::MatrixXd &sensorCov)
+        const Eigen::MatrixXd &noise)
     {
+        assert(noise.rows() == observations.rows());
+        assert(noise.cols() == observations.rows());
+
         auto result = sensorModel().estimateObservations(state_, observations);
 
+        // square noise to retrieve covariance
+        Eigen::MatrixXd sensorCov = noise * noise.transpose();
         Eigen::MatrixXd sensorCovScal = diagMat(sensorCov, observations.cols());
 
         Eigen::MatrixXd jacT = result.jac.transpose();
+        // calculate kalman gain
         Eigen::MatrixXd kalGain = cov_ * jacT * (result.jac * cov_ * jacT + sensorCovScal).inverse();
         Eigen::MatrixXd diff = observations - result.val;
         normalizeObservations(diff);

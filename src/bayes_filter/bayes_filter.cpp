@@ -137,10 +137,10 @@ namespace bf
 
     void BayesFilter::update(const Eigen::VectorXd &controls,
                 const Eigen::MatrixXd &observations,
-                const Eigen::MatrixXd &motionCov,
-                const Eigen::MatrixXd &sensorCov)
+                const Eigen::MatrixXd &motionNoise,
+                const Eigen::MatrixXd &sensorNoise)
     {
-        predict(controls, observations, motionCov);
-        correct(observations, sensorCov);
+        predict(controls, observations, motionNoise);
+        correct(observations, sensorNoise);
     }
 }

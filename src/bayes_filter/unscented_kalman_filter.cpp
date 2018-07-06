@@ -46,10 +46,10 @@ namespace bf
 
     void UnscentedKalmanFilter::predict(const Eigen::VectorXd &controls,
                                         const Eigen::MatrixXd &observations,
-                                        const Eigen::MatrixXd &motionCov)
+                                        const Eigen::MatrixXd &noise)
     {
-        assert(state_.size() == motionCov.rows());
-        assert(state_.size() == motionCov.cols());
+        assert(state_.size() == noise.rows());
+        assert(state_.size() == noise.cols());
 
         // calculate sigma points
         auto sigma = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
@@ -69,24 +69,26 @@ namespace bf
 
         // update current state estimate
         state_ = mu;
-        cov_ = cov + motionCov;
+        cov_ = cov + noise * noise.transpose();
     }
 
     void UnscentedKalmanFilter::correct(const Eigen::MatrixXd &observations,
-                                        const Eigen::MatrixXd &sensorCov)
+                                        const Eigen::MatrixXd &noise)
     {
         // transform observation matrix into vector
         Eigen::VectorXd obs = mat2vec(observations);
 
-        assert(sensorCov.rows() == sensorCov.cols());
+        assert(noise.rows() == noise.cols());
+        assert(noise.rows() == observations.rows());
 
-        // reshape sensorCov (=single measurement) into cov matrix
-        // for all received observations
-        Eigen::MatrixXd obsCov = Eigen::MatrixXd::Zero(obs.size(), obs.size());
+        // reshape noise (=single measurement stddev on main diagonal) into
+        // covariance matrix for all received observations
+        Eigen::MatrixXd obsCov;
+        obsCov.setZero(obs.size(), obs.size());
         for(unsigned int i = 0; i <  obs.size(); ++i)
         {
-            unsigned int j = i % sensorCov.rows();
-            obsCov(i, i) = sensorCov(j, j);
+            unsigned int j = i % noise.rows();
+            obsCov(i, i) = noise(j, j) * noise(j, j);
         }
 
         // calculate sigma points
@@ -119,8 +121,8 @@ namespace bf
                             sigmaB, mu, normObs_);
 
         assert(mu.size() == obs.size());
-        assert(cov.rows() == obsCov.rows());
-        assert(cov.cols() == obsCov.cols());
+        assert(cov.rows() == noise.rows());
+        assert(cov.cols() == noise.cols());
         assert(crossCov.rows() == state_.size());
         assert(crossCov.cols() == mu.size());
 
