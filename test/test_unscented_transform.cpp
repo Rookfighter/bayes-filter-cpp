@@ -5,19 +5,18 @@
  *      Author: Fabian Meyer
  */
 
-#include <catch.hpp>
 #include "bayes_filter/unscented_transform.h"
 #include "eigen_assert.h"
+#include <catch.hpp>
 
 using namespace bf;
 using namespace std::placeholders;
 
 static void noNormalize(Eigen::VectorXd &)
-{
-}
+{}
 
-static Eigen::VectorXd rowwiseMean(const Eigen::MatrixXd &m,
-    const Eigen::VectorXd &w)
+static Eigen::VectorXd rowwiseMean(
+    const Eigen::MatrixXd &m, const Eigen::VectorXd &w)
 {
     assert(m.cols() == w.size());
 
@@ -29,7 +28,8 @@ static Eigen::VectorXd rowwiseMean(const Eigen::MatrixXd &m,
     return result;
 }
 
-static Eigen::VectorXd linearTransform(const Eigen::VectorXd &state, const Eigen::VectorXd &facs)
+static Eigen::VectorXd linearTransform(
+    const Eigen::VectorXd &state, const Eigen::VectorXd &facs)
 {
     assert(state.rows() == facs.rows());
 
@@ -40,19 +40,21 @@ static Eigen::VectorXd linearTransform(const Eigen::VectorXd &state, const Eigen
     return result;
 }
 
-static Eigen::MatrixXd linearTransformCov(const Eigen::MatrixXd &cov, const Eigen::VectorXd &facs)
+static Eigen::MatrixXd linearTransformCov(
+    const Eigen::MatrixXd &cov, const Eigen::VectorXd &facs)
 {
     assert(cov.rows() == facs.rows());
 
     Eigen::MatrixXd result;
     result.setZero(cov.rows(), cov.cols());
     for(unsigned int i = 0; i < cov.rows(); ++i)
-        result(i, i) = cov(i,i) * facs(i) * facs(i);
+        result(i, i) = cov(i, i) * facs(i) * facs(i);
 
     return result;
 }
 
-static SigmaPoints linearTransformSig(SigmaPoints &sigma, const Eigen::VectorXd &facs)
+static SigmaPoints linearTransformSig(
+    SigmaPoints &sigma, const Eigen::VectorXd &facs)
 {
     assert(facs.rows() == sigma.points.rows());
 
@@ -89,19 +91,16 @@ TEST_CASE("Unscented Transform")
 
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 
             Eigen::MatrixXd wexp(2, 7);
-            wexp << 0.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
-                    1.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125;
+            wexp << 0.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 1.25, 0.125,
+                0.125, 0.125, 0.125, 0.125, 0.125;
 
             Eigen::MatrixXd sexp(3, 7);
-            sexp << 1, 3, 1, 1, -1,  1,  1,
-                    1, 1, 3, 1,  1, -1,  1,
-                    1, 1, 1, 3,  1,  1, -1;
+            sexp << 1, 3, 1, 1, -1, 1, 1, 1, 1, 3, 1, 1, -1, 1, 1, 1, 1, 3, 1,
+                1, -1;
 
             auto result = trans.calcSigmaPoints(state, cov, normalize);
 
@@ -117,18 +116,16 @@ TEST_CASE("Unscented Transform")
             trans.setKappa(2.0);
 
             Eigen::VectorXd state(2);
-            state << 1,1;
-            Eigen::MatrixXd cov(2,2);
-            cov << 1, 0,
-                   0, 1;
+            state << 1, 1;
+            Eigen::MatrixXd cov(2, 2);
+            cov << 1, 0, 0, 1;
 
             Eigen::MatrixXd wexp(2, 5);
-            wexp << 0.5, 0.125, 0.125, 0.125, 0.125,
-                    2.5, 0.125, 0.125, 0.125, 0.125;
+            wexp << 0.5, 0.125, 0.125, 0.125, 0.125, 2.5, 0.125, 0.125, 0.125,
+                0.125;
 
             Eigen::MatrixXd sexp(2, 5);
-            sexp << 1, 3, 1, -1,  1,
-                    1, 1, 3,  1, -1;
+            sexp << 1, 3, 1, -1, 1, 1, 1, 3, 1, -1;
 
             auto result = trans.calcSigmaPoints(state, cov, normalize);
 
@@ -145,19 +142,16 @@ TEST_CASE("Unscented Transform")
 
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 0, 0,
-                   0, 0, 0;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1, 0, 0, 0, 0, 0, 0, 0, 0;
 
             Eigen::MatrixXd wexp(2, 7);
-            wexp << 0.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125,
-                    1.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125;
+            wexp << 0.25, 0.125, 0.125, 0.125, 0.125, 0.125, 0.125, 1.25, 0.125,
+                0.125, 0.125, 0.125, 0.125, 0.125;
 
             Eigen::MatrixXd sexp(3, 7);
-            sexp << 1, 3, 1, 1, -1,  1,  1,
-                    1, 1, 1, 1,  1,  1,  1,
-                    1, 1, 1, 1,  1,  1,  1;
+            sexp << 1, 3, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                1;
 
             auto result = trans.calcSigmaPoints(state, cov, normalize);
 
@@ -184,10 +178,8 @@ TEST_CASE("Unscented Transform")
         {
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 
             auto sigma = trans.calcSigmaPoints(state, cov, normalize);
             auto actMu = trans.recoverMean(sigma, mean);
@@ -201,10 +193,8 @@ TEST_CASE("Unscented Transform")
         {
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1e-16, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1e-16;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1e-16, 0, 0, 0, 1, 0, 0, 0, 1e-16;
 
             auto sigma = trans.calcSigmaPoints(state, cov, normalize);
             auto actMu = trans.recoverMean(sigma, mean);
@@ -218,10 +208,8 @@ TEST_CASE("Unscented Transform")
         {
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1, 0, 0, 0, 1, 0, 0, 0, 1;
             Eigen::VectorXd facs(3);
             facs << 1, 2, 3;
 
@@ -242,10 +230,8 @@ TEST_CASE("Unscented Transform")
         {
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1e-16, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1e-16;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1e-16, 0, 0, 0, 1, 0, 0, 0, 1e-16;
             Eigen::VectorXd facs(3);
             facs << 1, 2, 3;
 
@@ -278,15 +264,12 @@ TEST_CASE("Unscented Transform")
         {
             Eigen::VectorXd state(3);
             state << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 
             auto sigma = trans.calcSigmaPoints(state, cov, normalize);
             auto actCrossCov = trans.recoverCrossCorrelation(
-                sigma, state, normalize,
-                sigma, state, normalize);
+                sigma, state, normalize, sigma, state, normalize);
 
             REQUIRE_MAT(cov, actCrossCov, eps);
         }
@@ -295,24 +278,19 @@ TEST_CASE("Unscented Transform")
         {
             Eigen::VectorXd state1(3);
             state1 << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1, 0, 0, 0, 1, 0, 0, 0, 1;
             Eigen::VectorXd facs(3);
             facs << 1, 2, 3;
             Eigen::VectorXd state2 = linearTransform(state1, facs);
 
-            Eigen::MatrixXd crossCov(3,3);
-            crossCov << 1, 0, 0,
-                        0, 2, 0,
-                        0, 0, 3;
+            Eigen::MatrixXd crossCov(3, 3);
+            crossCov << 1, 0, 0, 0, 2, 0, 0, 0, 3;
 
             auto sigma1 = trans.calcSigmaPoints(state1, cov, normalize);
             auto sigma2 = linearTransformSig(sigma1, facs);
             auto actCrossCov = trans.recoverCrossCorrelation(
-                sigma1, state1, normalize,
-                sigma2, state2, normalize);
+                sigma1, state1, normalize, sigma2, state2, normalize);
 
             REQUIRE_MAT(crossCov, actCrossCov, eps);
         }
@@ -321,24 +299,19 @@ TEST_CASE("Unscented Transform")
         {
             Eigen::VectorXd state1(3);
             state1 << 1, 1, 1;
-            Eigen::MatrixXd cov(3,3);
-            cov << 1e-16, 0, 0,
-                   0, 1, 0,
-                   0, 0, 1e-16;
+            Eigen::MatrixXd cov(3, 3);
+            cov << 1e-16, 0, 0, 0, 1, 0, 0, 0, 1e-16;
             Eigen::VectorXd facs(3);
             facs << 1, 2, 3;
             Eigen::VectorXd state2 = linearTransform(state1, facs);
 
-            Eigen::MatrixXd crossCov(3,3);
-            crossCov << 0, 0, 0,
-                      0, 2, 0,
-                      0, 0, 0;
+            Eigen::MatrixXd crossCov(3, 3);
+            crossCov << 0, 0, 0, 0, 2, 0, 0, 0, 0;
 
             auto sigma1 = trans.calcSigmaPoints(state1, cov, normalize);
             auto sigma2 = linearTransformSig(sigma1, facs);
             auto actCrossCov = trans.recoverCrossCorrelation(
-                sigma1, state1, normalize,
-                sigma2, state2, normalize);
+                sigma1, state1, normalize, sigma2, state2, normalize);
 
             REQUIRE_MAT(crossCov, actCrossCov, eps);
         }
