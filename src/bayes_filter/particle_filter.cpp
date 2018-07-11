@@ -10,21 +10,15 @@
 
 namespace bf
 {
-    ParticleFilter::ParticleFilter()
-        : BayesFilter()
-    {
-
-    }
+    ParticleFilter::ParticleFilter() : BayesFilter()
+    {}
 
     ParticleFilter::ParticleFilter(MotionModel *mm, SensorModel *sm)
         : BayesFilter(mm, sm)
-    {
-
-    }
+    {}
 
     ParticleFilter::~ParticleFilter()
-    {
-    }
+    {}
 
     void ParticleFilter::setSeed(const size_t seed)
     {
@@ -35,8 +29,8 @@ namespace bf
     {
         assert(particles_.size() > 0);
 
-        Eigen::MatrixXd states(particles_.front().state.size(),
-            particles_.size());
+        Eigen::MatrixXd states(
+            particles_.front().state.size(), particles_.size());
         Eigen::VectorXd weights(particles_.size());
 
         for(unsigned int i = 0; i < states.cols(); ++i)
@@ -81,8 +75,7 @@ namespace bf
     }
 
     Eigen::VectorXd ParticleFilter::randomizeState(
-        const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &noise)
+        const Eigen::VectorXd &state, const Eigen::MatrixXd &noise)
     {
         // noise matrix main diagonal holds stddev not variance!
         assert(state.size() == noise.cols());
@@ -93,8 +86,8 @@ namespace bf
         std::vector<std::normal_distribution<double>> distribs(state.size());
         for(unsigned int i = 0; i < state.size(); ++i)
         {
-            distribs[i] = std::normal_distribution<double>(state(i),
-                          noise(i, i));
+            distribs[i] =
+                std::normal_distribution<double>(state(i), noise(i, i));
         }
 
         for(unsigned int i = 0; i < state.size(); ++i)
@@ -141,7 +134,7 @@ namespace bf
 
         // calc step between each sample
         // assuming normalized weights (sum is 1.0)
-        double step =  1.0 / static_cast<double>(particles_.size());
+        double step = 1.0 / static_cast<double>(particles_.size());
         // assume uniform weight as default weight
         double defaultWeight = step;
 
@@ -172,8 +165,8 @@ namespace bf
         particles_ = result;
     }
 
-    void ParticleFilter::init(const Eigen::VectorXd &state,
-                              const Eigen::MatrixXd &cov)
+    void ParticleFilter::init(
+        const Eigen::VectorXd &state, const Eigen::MatrixXd &cov)
     {
         assert(state.size() == cov.cols());
         assert(state.size() == cov.rows());
@@ -182,8 +175,8 @@ namespace bf
         std::vector<std::normal_distribution<double>> distribs(state.size());
         for(unsigned int i = 0; i < state.size(); ++i)
         {
-            distribs[i] = std::normal_distribution<double>(state(i),
-                          std::sqrt(cov(i, i)));
+            distribs[i] = std::normal_distribution<double>(
+                state(i), std::sqrt(cov(i, i)));
         }
 
         double weight = 1.0 / static_cast<double>(particles_.size());
@@ -198,29 +191,30 @@ namespace bf
     }
 
     void ParticleFilter::predict(const Eigen::VectorXd &controls,
-                                 const Eigen::MatrixXd &observations,
-                                 const Eigen::MatrixXd &noise)
+        const Eigen::MatrixXd &observations,
+        const Eigen::MatrixXd &noise)
     {
         assert(particles_.front().state.size() == noise.rows());
         assert(particles_.front().state.size() == noise.cols());
 
         for(Particle &p : particles_)
         {
-            p.state = motionModel().estimateState(
-                p.state, controls, observations).val;
+            p.state = motionModel()
+                          .estimateState(p.state, controls, observations)
+                          .val;
             p.state = randomizeState(p.state, noise);
         }
     }
 
-    void ParticleFilter::correct(const Eigen::MatrixXd &observations,
-                                 const Eigen::MatrixXd &sensorCov)
+    void ParticleFilter::correct(
+        const Eigen::MatrixXd &observations, const Eigen::MatrixXd &sensorCov)
     {
         assert(sensorCov.size() > 0);
 
         for(Particle &p : particles_)
         {
-            p.weight = sensorModel().likelihood(p.state, observations,
-                                                sensorCov);
+            p.weight =
+                sensorModel().likelihood(p.state, observations, sensorCov);
         }
 
         normalizeWeight();

@@ -11,14 +11,10 @@ namespace bf
 {
     UnscentedTransform::UnscentedTransform()
         : kappa_(1.0), alpha_(0.9), beta_(2.0)
-    {
-
-    }
+    {}
 
     UnscentedTransform::~UnscentedTransform()
-    {
-
-    }
+    {}
 
     void UnscentedTransform::setKappa(const double kappa)
     {
@@ -69,7 +65,8 @@ namespace bf
         result.points.col(0) = state;
         // calc weight of first sigma point
         result.weights(0, 0) = lambda / (nd + lambda);
-        result.weights(1, 0) = result.weights(0, 0) + (1 - alpha_ * alpha_ + beta_);
+        result.weights(1, 0) =
+            result.weights(0, 0) + (1 - alpha_ * alpha_ + beta_);
 
         // all remeaining sigma point have the same constant weight
         double constWeight = 1.0 / (2.0 * (nd + lambda));
@@ -95,8 +92,7 @@ namespace bf
     }
 
     Eigen::VectorXd UnscentedTransform::recoverMean(
-        const SigmaPoints &sigma,
-        const WeightedMeanFunc &mean) const
+        const SigmaPoints &sigma, const WeightedMeanFunc &mean) const
     {
         assert(sigma.weights.rows() == 2);
         assert(sigma.points.cols() == sigma.weights.cols());
@@ -120,8 +116,8 @@ namespace bf
         Eigen::VectorXd diff;
         for(unsigned int i = 0; i < sigma.points.cols(); ++i)
         {
-             diff = sigma.points.col(i) - mean;
-             normalize(diff);
+            diff = sigma.points.col(i) - mean;
+            normalize(diff);
             result += sigma.weights(1, i) * diff * diff.transpose();
         }
 
@@ -156,5 +152,4 @@ namespace bf
 
         return result;
     }
-
 }

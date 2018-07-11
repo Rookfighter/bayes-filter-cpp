@@ -10,32 +10,25 @@
 
 namespace bf
 {
-
     UnscentedKalmanFilter::UnscentedKalmanFilter()
         : BayesFilter(), unscentTrans_()
-    {
+    {}
 
-    }
-
-    UnscentedKalmanFilter::UnscentedKalmanFilter(MotionModel *mm,
-            SensorModel *sm)
+    UnscentedKalmanFilter::UnscentedKalmanFilter(
+        MotionModel *mm, SensorModel *sm)
         : BayesFilter(mm, sm), unscentTrans_()
-    {
-
-    }
+    {}
 
     UnscentedKalmanFilter::~UnscentedKalmanFilter()
-    {
-
-    }
+    {}
 
     StateEstimate UnscentedKalmanFilter::getEstimate() const
     {
         return {state_, cov_};
     }
 
-    void UnscentedKalmanFilter::init(const Eigen::VectorXd &state,
-                                     const Eigen::MatrixXd &cov)
+    void UnscentedKalmanFilter::init(
+        const Eigen::VectorXd &state, const Eigen::MatrixXd &cov)
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
@@ -45,8 +38,8 @@ namespace bf
     }
 
     void UnscentedKalmanFilter::predict(const Eigen::VectorXd &controls,
-                                        const Eigen::MatrixXd &observations,
-                                        const Eigen::MatrixXd &noise)
+        const Eigen::MatrixXd &observations,
+        const Eigen::MatrixXd &noise)
     {
         assert(state_.size() == noise.rows());
         assert(state_.size() == noise.cols());
@@ -58,7 +51,7 @@ namespace bf
         {
             // estimate new state for sigma point
             auto mmResult = motionModel().estimateState(
-                                sigma.points.col(i), controls, observations);
+                sigma.points.col(i), controls, observations);
             // normalize resulting state
             normalizeState(mmResult.val);
             sigma.points.col(i) = mmResult.val;
@@ -72,8 +65,8 @@ namespace bf
         cov_ = cov + noise * noise.transpose();
     }
 
-    void UnscentedKalmanFilter::correct(const Eigen::MatrixXd &observations,
-                                        const Eigen::MatrixXd &noise)
+    void UnscentedKalmanFilter::correct(
+        const Eigen::MatrixXd &observations, const Eigen::MatrixXd &noise)
     {
         assert(noise.rows() == noise.cols());
         assert(noise.rows() == observations.rows());
@@ -88,7 +81,7 @@ namespace bf
         // covariance matrix for all received observations
         Eigen::MatrixXd obsCov;
         obsCov.setZero(obs.size(), obs.size());
-        for(unsigned int i = 0; i <  obs.size(); ++i)
+        for(unsigned int i = 0; i < obs.size(); ++i)
         {
             unsigned int j = i % noise.rows();
             obsCov(i, i) = noise(j, j) * noise(j, j);
@@ -109,19 +102,16 @@ namespace bf
             // if sigmaB was not initialized init it now
             if(sigmaB.points.rows() < smResult.val.size())
             {
-                sigmaB.points.resize(smResult.val.size(),
-                                     sigmaA.points.cols());
+                sigmaB.points.resize(smResult.val.size(), sigmaA.points.cols());
             }
             // reshape resulting observations
             sigmaB.points.col(i) = mat2vec(smResult.val);
-
         }
 
         auto mu = unscentTrans_.recoverMean(sigmaB, meanObs_);
         auto cov = unscentTrans_.recoverCovariance(sigmaB, mu, normObs_);
         auto crossCov = unscentTrans_.recoverCrossCorrelation(
-                            sigmaA, state_, normState_,
-                            sigmaB, mu, normObs_);
+            sigmaA, state_, normState_, sigmaB, mu, normObs_);
 
         assert(mu.size() == obs.size());
         assert(cov.rows() == obsCov.rows());

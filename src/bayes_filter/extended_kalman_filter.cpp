@@ -12,28 +12,22 @@ namespace bf
 {
     ExtendedKalmanFilter::ExtendedKalmanFilter()
         : BayesFilter(), state_(), cov_()
-    {
-
-    }
+    {}
 
     ExtendedKalmanFilter::ExtendedKalmanFilter(MotionModel *mm, SensorModel *sm)
         : BayesFilter(mm, sm), state_(), cov_()
-    {
-
-    }
+    {}
 
     ExtendedKalmanFilter::~ExtendedKalmanFilter()
-    {
-
-    }
+    {}
 
     StateEstimate ExtendedKalmanFilter::getEstimate() const
     {
         return {state_, cov_};
     }
 
-    void ExtendedKalmanFilter::init(const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &cov)
+    void ExtendedKalmanFilter::init(
+        const Eigen::VectorXd &state, const Eigen::MatrixXd &cov)
     {
         state_ = state;
         cov_ = cov;
@@ -42,22 +36,23 @@ namespace bf
     void ExtendedKalmanFilter::predict(const Eigen::VectorXd &controls,
         const Eigen::MatrixXd &observations,
         const Eigen::MatrixXd &noise)
-     {
-         assert(noise.cols() == cov_.cols());
-         assert(noise.rows() == cov_.rows());
+    {
+        assert(noise.cols() == cov_.cols());
+        assert(noise.rows() == cov_.rows());
 
-         auto result = motionModel().estimateState(state_, controls,
-             observations);
+        auto result =
+            motionModel().estimateState(state_, controls, observations);
 
-         assert(result.val.size() == state_.size());
-         assert(result.jac.rows() == state_.size());
-         assert(result.jac.cols() == state_.size());
+        assert(result.val.size() == state_.size());
+        assert(result.jac.rows() == state_.size());
+        assert(result.jac.cols() == state_.size());
 
-         state_ = result.val;
-         cov_ = result.jac * cov_ * result.jac.transpose() + noise * noise.transpose();
-     }
-    void ExtendedKalmanFilter::correct(const Eigen::MatrixXd &observations,
-        const Eigen::MatrixXd &noise)
+        state_ = result.val;
+        cov_ = result.jac * cov_ * result.jac.transpose() +
+               noise * noise.transpose();
+    }
+    void ExtendedKalmanFilter::correct(
+        const Eigen::MatrixXd &observations, const Eigen::MatrixXd &noise)
     {
         assert(noise.rows() == observations.rows());
         assert(noise.cols() == observations.rows());
@@ -79,7 +74,8 @@ namespace bf
 
         Eigen::MatrixXd jacT = result.jac.transpose();
         // calculate kalman gain
-        Eigen::MatrixXd kalGain = cov_ * jacT * (result.jac * cov_ * jacT + sensorCovScal).inverse();
+        Eigen::MatrixXd kalGain =
+            cov_ * jacT * (result.jac * cov_ * jacT + sensorCovScal).inverse();
         Eigen::MatrixXd diff = observations - result.val;
         normalizeObservations(diff);
         Eigen::VectorXd diffV = mat2vec(diff);

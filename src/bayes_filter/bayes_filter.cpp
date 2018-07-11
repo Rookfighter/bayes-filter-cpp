@@ -5,7 +5,6 @@
  *      Author: Fabian Meyer
  */
 
-
 #include "bayes_filter/bayes_filter.h"
 
 namespace ph = std::placeholders;
@@ -13,12 +12,10 @@ namespace ph = std::placeholders;
 namespace bf
 {
     static void noNormalize(Eigen::VectorXd &)
-    {
+    {}
 
-    }
-
-    static Eigen::VectorXd rowwiseMean(const Eigen::MatrixXd &m,
-        const Eigen::VectorXd &w)
+    static Eigen::VectorXd rowwiseMean(
+        const Eigen::MatrixXd &m, const Eigen::VectorXd &w)
     {
         assert(m.cols() == w.size());
 
@@ -30,20 +27,16 @@ namespace bf
         return result;
     }
 
-    BayesFilter::BayesFilter()
-        : BayesFilter(nullptr, nullptr)
-    {
-
-    }
+    BayesFilter::BayesFilter() : BayesFilter(nullptr, nullptr)
+    {}
 
     BayesFilter::BayesFilter(MotionModel *mm, SensorModel *sm)
         : motionModel_(mm), sensorModel_(sm),
-        normState_(std::bind(noNormalize, ph::_1)),
-        normObs_(std::bind(noNormalize, ph::_1)),
-        meanState_(std::bind(rowwiseMean, ph::_1, ph::_2)),
-        meanObs_(std::bind(rowwiseMean, ph::_1, ph::_2))
-    {
-    }
+          normState_(std::bind(noNormalize, ph::_1)),
+          normObs_(std::bind(noNormalize, ph::_1)),
+          meanState_(std::bind(rowwiseMean, ph::_1, ph::_2)),
+          meanObs_(std::bind(rowwiseMean, ph::_1, ph::_2))
+    {}
 
     BayesFilter::~BayesFilter()
     {
@@ -120,8 +113,7 @@ namespace bf
     }
 
     Eigen::VectorXd BayesFilter::meanOfStates(
-        const Eigen::MatrixXd &states,
-        const Eigen::VectorXd &weights) const
+        const Eigen::MatrixXd &states, const Eigen::VectorXd &weights) const
     {
         assert(states.cols() == weights.size());
         return meanState_(states, weights);
@@ -136,9 +128,9 @@ namespace bf
     }
 
     void BayesFilter::update(const Eigen::VectorXd &controls,
-                const Eigen::MatrixXd &observations,
-                const Eigen::MatrixXd &motionNoise,
-                const Eigen::MatrixXd &sensorNoise)
+        const Eigen::MatrixXd &observations,
+        const Eigen::MatrixXd &motionNoise,
+        const Eigen::MatrixXd &sensorNoise)
     {
         predict(controls, observations, motionNoise);
         correct(observations, sensorNoise);
