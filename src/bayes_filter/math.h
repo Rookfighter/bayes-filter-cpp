@@ -8,9 +8,9 @@
 #ifndef BFCPP_MATH_H_
 #define BFCPP_MATH_H_
 
-#include <cmath>
-#include <cassert>
 #include <Eigen/Dense>
+#include <cassert>
+#include <cmath>
 
 namespace bf
 {
@@ -46,8 +46,8 @@ namespace bf
     }
 
     inline Eigen::MatrixXd vec2mat(const Eigen::VectorXd &vec,
-                                   const unsigned int rows,
-                                   const unsigned int cols)
+        const unsigned int rows,
+        const unsigned int cols)
     {
         assert(rows * cols == vec.size());
         Eigen::MatrixXd result(rows, cols);
@@ -64,16 +64,17 @@ namespace bf
         return result;
     }
 
-    inline Eigen::MatrixXd diagMat(const Eigen::MatrixXd &mat,
-                                   const unsigned int times)
+    inline Eigen::MatrixXd diagMat(
+        const Eigen::MatrixXd &mat, const unsigned int times)
     {
         unsigned int rows = times * mat.rows();
         unsigned int cols = times * mat.cols();
-        
+
         Eigen::MatrixXd result;
         result.setZero(rows, cols);
 
-        for(unsigned int m = 0; m * mat.cols() < cols && m * mat.rows() < rows; ++m)
+        for(unsigned int m = 0; m * mat.cols() < cols && m * mat.rows() < rows;
+            ++m)
         {
             for(unsigned int col = 0; col < mat.cols(); ++col)
             {

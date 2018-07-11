@@ -8,8 +8,8 @@
 #ifndef BFCPP_UNSCENTED_TRANSFORM_H_
 #define BFCPP_UNSCENTED_TRANSFORM_H_
 
-#include <functional>
 #include <Eigen/Dense>
+#include <functional>
 
 namespace bf
 {
@@ -21,16 +21,18 @@ namespace bf
 
     class UnscentedTransform
     {
-    private:
+      private:
         double kappa_;
         double alpha_;
         double beta_;
-    public:
+
+      public:
         typedef std::function<void(Eigen::VectorXd &)> NormalizeFunc;
         /** Function that calculates the rowwise mean of the given matrix. Each
          *  column represents one sample / measurement / state. */
-        typedef std::function<Eigen::VectorXd(const Eigen::MatrixXd &,
-            const Eigen::VectorXd &)> WeightedMeanFunc;
+        typedef std::function<Eigen::VectorXd(
+            const Eigen::MatrixXd &, const Eigen::VectorXd &)>
+            WeightedMeanFunc;
 
         struct Result
         {
@@ -67,26 +69,26 @@ namespace bf
 
         /** Calculates sigma points from the given state and covariance.
          *  @param state state vector
-         *  @param cov covariance matrix, (state.size(), state.size()) dimensions
+         *  @param cov covariance matrix, (state.size(), state.size())
+         * dimensions
          *  @return set of sigma points and corresponding weights */
         SigmaPoints calcSigmaPoints(const Eigen::VectorXd &state,
-                                    const Eigen::MatrixXd &cov,
-                                    const NormalizeFunc &normalize) const;
+            const Eigen::MatrixXd &cov,
+            const NormalizeFunc &normalize) const;
 
         /** Recovers the mean value from sigma points.
          *  @param sigma sigma points
          *  @param normalize normalization function for a sigma point
          *  @return mean of the sigma points, normalized */
-        Eigen::VectorXd recoverMean(const SigmaPoints &sigma,
-                                    const WeightedMeanFunc &mean) const;
+        Eigen::VectorXd recoverMean(
+            const SigmaPoints &sigma, const WeightedMeanFunc &mean) const;
 
         /** Recovers the covariance from sigma points.
          *  @param sigma sigma points
          *  @param mean mean value of the sigma points
          *  @param normalize normalization function for a sigma point
          *  @return covariance of the sigma points */
-        Eigen::MatrixXd recoverCovariance(
-            const SigmaPoints &sigma,
+        Eigen::MatrixXd recoverCovariance(const SigmaPoints &sigma,
             const Eigen::VectorXd &mean,
             const NormalizeFunc &normalize) const;
 
@@ -101,8 +103,7 @@ namespace bf
          *  @param meanB mean value of sigmaB
          *  @param normalizeB normalization function for sigmaB
          *  @return cross correlation of the two sets (nA x nB) */
-        Eigen::MatrixXd recoverCrossCorrelation(
-            const SigmaPoints &sigmaA,
+        Eigen::MatrixXd recoverCrossCorrelation(const SigmaPoints &sigmaA,
             const Eigen::VectorXd &meanA,
             const NormalizeFunc &normalizeA,
             const SigmaPoints &sigmaB,

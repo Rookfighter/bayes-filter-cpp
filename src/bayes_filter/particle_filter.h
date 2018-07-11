@@ -8,8 +8,8 @@
 #ifndef BFCPP_PARTICLE_FILTER_H_
 #define BFCPP_PARTICLE_FILTER_H_
 
-#include <random>
 #include "bayes_filter/bayes_filter.h"
+#include <random>
 
 namespace bf
 {
@@ -23,14 +23,14 @@ namespace bf
     typedef std::vector<Particle> ParticleSet;
 
     /** Implementation of a Particle Filter.*/
-    class ParticleFilter: public BayesFilter
+    class ParticleFilter : public BayesFilter
     {
-    private:
+      private:
         ParticleSet particles_;
         std::default_random_engine rndgen_;
 
-        Eigen::VectorXd randomizeState(const Eigen::VectorXd &state,
-                                       const Eigen::MatrixXd &noise);
+        Eigen::VectorXd randomizeState(
+            const Eigen::VectorXd &state, const Eigen::MatrixXd &noise);
         void normalizeWeight();
 
         /** Calculates the number of effective particles as: 1 / sum(weight^2).
@@ -38,7 +38,7 @@ namespace bf
         double effectiveParticles() const;
         void resample();
 
-    public:
+      public:
         ParticleFilter();
         ParticleFilter(MotionModel *mm, SensorModel *sm);
         ~ParticleFilter();
@@ -53,13 +53,13 @@ namespace bf
          *  @return most likely state estimate */
         Eigen::VectorXd getMostLikely() const;
 
-        void init(const Eigen::VectorXd &state,
-                  const Eigen::MatrixXd &cov) override;
+        void init(
+            const Eigen::VectorXd &state, const Eigen::MatrixXd &cov) override;
         void predict(const Eigen::VectorXd &controls,
-                     const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &noise) override;
+            const Eigen::MatrixXd &observations,
+            const Eigen::MatrixXd &noise) override;
         void correct(const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &noise) override;
+            const Eigen::MatrixXd &noise) override;
     };
 }
 

@@ -13,26 +13,26 @@
 namespace bf
 {
     /** Implementation of a Extended Kalman Filter.*/
-    class ExtendedKalmanFilter: public BayesFilter
+    class ExtendedKalmanFilter : public BayesFilter
     {
-    private:
+      private:
         Eigen::VectorXd state_;
         Eigen::MatrixXd cov_;
 
-    public:
+      public:
         ExtendedKalmanFilter();
         ExtendedKalmanFilter(MotionModel *mm, SensorModel *sm);
         ~ExtendedKalmanFilter();
 
         StateEstimate getEstimate() const override;
 
-        void init(const Eigen::VectorXd &state,
-                  const Eigen::MatrixXd &cov) override;
+        void init(
+            const Eigen::VectorXd &state, const Eigen::MatrixXd &cov) override;
         void predict(const Eigen::VectorXd &controls,
-                     const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &noise) override;
+            const Eigen::MatrixXd &observations,
+            const Eigen::MatrixXd &noise) override;
         void correct(const Eigen::MatrixXd &observations,
-                     const Eigen::MatrixXd &noise) override;
+            const Eigen::MatrixXd &noise) override;
     };
 }
 

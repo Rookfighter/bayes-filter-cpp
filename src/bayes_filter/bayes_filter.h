@@ -8,8 +8,8 @@
 #ifndef BFCPP_BAYES_FILTER_H_
 #define BFCPP_BAYES_FILTER_H_
 
-#include <functional>
 #include "bayes_filter/models.h"
+#include <functional>
 
 namespace bf
 {
@@ -23,17 +23,17 @@ namespace bf
     /** Interface for bayes filter implementations. */
     class BayesFilter
     {
-    public:
+      public:
         /** Function that normalizes the input vector and returns normalized
          *  version */
-        typedef std::function<void(Eigen::VectorXd &)>
-            NormalizeFunc;
+        typedef std::function<void(Eigen::VectorXd &)> NormalizeFunc;
         /** Function that calculates the rowwise mean of the given matrix. Each
          *  column represents one sample / measurement / state. */
-        typedef std::function<Eigen::VectorXd(const Eigen::MatrixXd &,
-            const Eigen::VectorXd &)> WeightedMeanFunc;
+        typedef std::function<Eigen::VectorXd(
+            const Eigen::MatrixXd &, const Eigen::VectorXd &)>
+            WeightedMeanFunc;
 
-    protected:
+      protected:
         MotionModel *motionModel_;
         SensorModel *sensorModel_;
 
@@ -43,8 +43,7 @@ namespace bf
         WeightedMeanFunc meanState_;
         WeightedMeanFunc meanObs_;
 
-    public:
-
+      public:
         BayesFilter();
         BayesFilter(MotionModel *mm, SensorModel *sm);
         virtual ~BayesFilter();
@@ -72,13 +71,10 @@ namespace bf
         void setMeanState(const WeightedMeanFunc &func);
         void setMeanObservation(const WeightedMeanFunc &func);
 
-        Eigen::VectorXd meanOfStates(
-            const Eigen::MatrixXd &states,
+        Eigen::VectorXd meanOfStates(const Eigen::MatrixXd &states,
             const Eigen::VectorXd &weights) const;
-        Eigen::VectorXd meanOfObservations(
-            const Eigen::MatrixXd &observations,
+        Eigen::VectorXd meanOfObservations(const Eigen::MatrixXd &observations,
             const Eigen::VectorXd &weights) const;
-
 
         /** Return the current estimated state vector of the filter and its
          *  covariance.
@@ -88,8 +84,8 @@ namespace bf
         /** Initialize the filter with the given state vector and covariance.
          *  @param state initial state vector of size Nx1
          *  @param cov initial covariance of size NxN*/
-        virtual void init(const Eigen::VectorXd &state,
-                          const Eigen::MatrixXd &cov) = 0;
+        virtual void init(
+            const Eigen::VectorXd &state, const Eigen::MatrixXd &cov) = 0;
 
         /** Execute prediction step of the bayes filter with the motion model.
          *  @param controls control vector
@@ -97,15 +93,15 @@ namespace bf
          *         observation
          *  @param noise noise matrix of the motion model of size NxN */
         virtual void predict(const Eigen::VectorXd &controls,
-                             const Eigen::MatrixXd &observations,
-                             const Eigen::MatrixXd &noise) = 0;
+            const Eigen::MatrixXd &observations,
+            const Eigen::MatrixXd &noise) = 0;
 
         /** Execute correction step of the bayes filter with the sensor model.
          *  @param observations observation matrix, each column is one
          *         observation of the length M
          *  @param noise noise matrix of the sensor model of size MxM */
         virtual void correct(const Eigen::MatrixXd &observations,
-                             const Eigen::MatrixXd &noise) = 0;
+            const Eigen::MatrixXd &noise) = 0;
 
         /** Update the filter by one discrete timestep, which runs prediction
          *  and correction step.
@@ -117,12 +113,10 @@ namespace bf
          *  @param sensorNoise noise matrix (sqrt of the covariance) of the
          *         sensor model of size MxM */
         void update(const Eigen::VectorXd &controls,
-                    const Eigen::MatrixXd &observations,
-                    const Eigen::MatrixXd &motionNoise,
-                    const Eigen::MatrixXd &sensorNoise);
+            const Eigen::MatrixXd &observations,
+            const Eigen::MatrixXd &motionNoise,
+            const Eigen::MatrixXd &sensorNoise);
     };
-
-
 }
 
 #endif
