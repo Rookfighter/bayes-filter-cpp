@@ -16,7 +16,7 @@ namespace bf
     /** Implementation of a Unscented Kalman Filter.*/
     class UnscentedKalmanFilter : public BayesFilter
     {
-      private:
+    private:
         UnscentedTransform unscentTrans_;
 
         Eigen::VectorXd state_;
@@ -30,7 +30,7 @@ namespace bf
             const SigmaPoints &sigmaB,
             const Eigen::VectorXd &meanB) const;
 
-      public:
+    public:
         UnscentedKalmanFilter();
         UnscentedKalmanFilter(MotionModel *mm, SensorModel *sm);
         ~UnscentedKalmanFilter();

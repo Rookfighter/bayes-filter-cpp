@@ -15,11 +15,11 @@ namespace bf
     /** Implementation of a Extended Kalman Filter.*/
     class ExtendedKalmanFilter : public BayesFilter
     {
-      private:
+    private:
         Eigen::VectorXd state_;
         Eigen::MatrixXd cov_;
 
-      public:
+    public:
         ExtendedKalmanFilter();
         ExtendedKalmanFilter(MotionModel *mm, SensorModel *sm);
         ~ExtendedKalmanFilter();

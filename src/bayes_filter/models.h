@@ -17,7 +17,7 @@ namespace bf
 {
     class MotionModel
     {
-      public:
+    public:
         /** The first component of a MotionModel::Result is the new state
          * estimate. The second component is the Jacobian at the given
          * point. */
@@ -45,7 +45,7 @@ namespace bf
 
     class SensorModel
     {
-      public:
+    public:
         SensorModel()
         {}
         virtual ~SensorModel()

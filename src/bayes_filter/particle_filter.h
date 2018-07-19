@@ -25,7 +25,7 @@ namespace bf
     /** Implementation of a Particle Filter.*/
     class ParticleFilter : public BayesFilter
     {
-      private:
+    private:
         ParticleSet particles_;
         std::default_random_engine rndgen_;
 
@@ -38,7 +38,7 @@ namespace bf
         double effectiveParticles() const;
         void resample();
 
-      public:
+    public:
         ParticleFilter();
         ParticleFilter(MotionModel *mm, SensorModel *sm);
         ~ParticleFilter();

@@ -19,8 +19,8 @@ public:
     {}
 
     Result estimateState(const Eigen::VectorXd &state,
-                         const Eigen::VectorXd &,
-                         const Eigen::MatrixXd &) const override
+        const Eigen::VectorXd &,
+        const Eigen::MatrixXd &) const override
     {
         Result result;
         result.val = state;
@@ -38,19 +38,18 @@ public:
     ~IdentitySensorModel()
     {}
 
-    Result estimateObservations(
-        const Eigen::VectorXd &state,
+    Result estimateObservations(const Eigen::VectorXd &state,
         const Eigen::MatrixXd &observations) const override
     {
         Result result;
         result.val = observations;
-        result.jac = Eigen::MatrixXd::Identity(observations.size(), state.size());
+        result.jac =
+            Eigen::MatrixXd::Identity(observations.size(), state.size());
 
         return result;
     }
 
-    double likelihood(
-        const Eigen::VectorXd &,
+    double likelihood(const Eigen::VectorXd &,
         const Eigen::MatrixXd &,
         const Eigen::MatrixXd &) const override
     {
@@ -67,8 +66,8 @@ public:
     {}
 
     Result estimateState(const Eigen::VectorXd &state,
-                         const Eigen::VectorXd &controls,
-                         const Eigen::MatrixXd &) const override
+        const Eigen::VectorXd &controls,
+        const Eigen::MatrixXd &) const override
     {
         assert(state.size() == 4);
         assert(controls.size() == 1);
@@ -79,15 +78,10 @@ public:
 
         Result result;
         result.val.resize(state.size());
-        result.val << pos(0) + vel(0) * dt,
-                      pos(1) + vel(1) * dt,
-                      vel(0),
-                      vel(1);
+        result.val << pos(0) + vel(0) * dt, pos(1) + vel(1) * dt, vel(0),
+            vel(1);
         result.jac.resize(state.size(), state.size());
-        result.jac << 1, 0, dt,  0,
-                      0, 1,  0, dt,
-                      0, 0,  1,  0,
-                      0, 0,  0,  1;
+        result.jac << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
 
         return result;
     }

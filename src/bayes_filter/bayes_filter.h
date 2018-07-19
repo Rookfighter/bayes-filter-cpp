@@ -23,7 +23,7 @@ namespace bf
     /** Interface for bayes filter implementations. */
     class BayesFilter
     {
-      public:
+    public:
         /** Function that normalizes the input vector and returns normalized
          *  version */
         typedef std::function<void(Eigen::VectorXd &)> NormalizeFunc;
@@ -33,7 +33,7 @@ namespace bf
             const Eigen::MatrixXd &, const Eigen::VectorXd &)>
             WeightedMeanFunc;
 
-      protected:
+    protected:
         MotionModel *motionModel_;
         SensorModel *sensorModel_;
 
@@ -43,7 +43,7 @@ namespace bf
         WeightedMeanFunc meanState_;
         WeightedMeanFunc meanObs_;
 
-      public:
+    public:
         BayesFilter();
         BayesFilter(MotionModel *mm, SensorModel *sm);
         virtual ~BayesFilter();

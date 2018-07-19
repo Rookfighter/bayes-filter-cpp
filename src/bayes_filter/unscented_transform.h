@@ -21,12 +21,12 @@ namespace bf
 
     class UnscentedTransform
     {
-      private:
+    private:
         double kappa_;
         double alpha_;
         double beta_;
 
-      public:
+    public:
         typedef std::function<void(Eigen::VectorXd &)> NormalizeFunc;
         /** Function that calculates the rowwise mean of the given matrix. Each
          *  column represents one sample / measurement / state. */
