@@ -6,6 +6,7 @@
  */
 
 #include "bayes_filter/unscented_transform.h"
+#include "bayes_filter/math.h"
 
 namespace bf
 {
@@ -40,10 +41,10 @@ namespace bf
         return alpha_ * alpha_ * (nd + kappa_) - nd;
     }
 
-    SigmaPoints UnscentedTransform::calcSigmaPoints(
+    void UnscentedTransform::calcSigmaPoints(
         const Eigen::VectorXd &state,
         const Eigen::MatrixXd &cov,
-        const NormalizeFunc &normalize) const
+        SigmaPoints &outSigma) const
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
@@ -53,20 +54,19 @@ namespace bf
         double nd = static_cast<double>(n);
         double lambda = calcLambda(n);
 
-        SigmaPoints result;
-        result.points.resize(n, 2 * n + 1);
-        result.weights.resize(2, 2 * n + 1);
+        outSigma.points.resize(n, 2 * n + 1);
+        outSigma.weights.resize(2, 2 * n + 1);
 
         // calculate sigma point distances to mean
         // each column is a distance vector
         Eigen::MatrixXd sigmaOffset = ((nd + lambda) * cov).llt().matrixL();
 
         // first sigma point is always just the mean
-        result.points.col(0) = state;
+        outSigma.points.col(0) = state;
         // calc weight of first sigma point
-        result.weights(0, 0) = lambda / (nd + lambda);
-        result.weights(1, 0) =
-            result.weights(0, 0) + (1 - alpha_ * alpha_ + beta_);
+        outSigma.weights(0, 0) = lambda / (nd + lambda);
+        outSigma.weights(1, 0) =
+            outSigma.weights(0, 0) + (1 - alpha_ * alpha_ + beta_);
 
         // all remeaining sigma point have the same constant weight
         double constWeight = 1.0 / (2.0 * (nd + lambda));
@@ -75,81 +75,58 @@ namespace bf
         {
             // calculate sigma point in positive direction
             tmp = state + sigmaOffset.col(i);
-            normalize(tmp);
-            result.points.col(i + 1) = tmp;
-            result.weights(0, i + 1) = constWeight;
-            result.weights(1, i + 1) = constWeight;
+            outSigma.points.col(i + 1) = tmp;
+            outSigma.weights(0, i + 1) = constWeight;
+            outSigma.weights(1, i + 1) = constWeight;
 
             // calculate sigma point in negative direction
             tmp = state - sigmaOffset.col(i);
-            normalize(tmp);
-            result.points.col(i + 1 + n) = tmp;
-            result.weights(0, i + 1 + n) = constWeight;
-            result.weights(1, i + 1 + n) = constWeight;
+            outSigma.points.col(i + 1 + n) = tmp;
+            outSigma.weights(0, i + 1 + n) = constWeight;
+            outSigma.weights(1, i + 1 + n) = constWeight;
         }
-
-        return result;
     }
 
-    Eigen::VectorXd UnscentedTransform::recoverMean(
-        const SigmaPoints &sigma, const WeightedMeanFunc &mean) const
+    void UnscentedTransform::recoverMean(const SigmaPoints &sigma,
+        Eigen::VectorXd &outMean) const
     {
         assert(sigma.weights.rows() == 2);
         assert(sigma.points.cols() == sigma.weights.cols());
 
-        Eigen::VectorXd weights = sigma.weights.row(0);
-
-        return mean(sigma.points, weights);
+        computeWeightedMean(sigma.points, sigma.weights.row(0), outMean);
     }
 
-    Eigen::MatrixXd UnscentedTransform::recoverCovariance(
+    void UnscentedTransform::recoverCovariance(
         const SigmaPoints &sigma,
         const Eigen::VectorXd &mean,
-        const NormalizeFunc &normalize) const
+        Eigen::MatrixXd &outCovariance) const
     {
         assert(sigma.points.cols() == sigma.weights.cols());
         assert(sigma.points.rows() == mean.size());
 
-        Eigen::MatrixXd result;
-        result.setZero(mean.size(), mean.size());
-
-        Eigen::VectorXd diff;
-        for(unsigned int i = 0; i < sigma.points.cols(); ++i)
-        {
-            diff = sigma.points.col(i) - mean;
-            normalize(diff);
-            result += sigma.weights(1, i) * diff * diff.transpose();
-        }
-
-        return result;
+        computeWeightedCovariance(sigma.points, sigma.weights.row(1), mean,
+            outCovariance);
     }
 
-    Eigen::MatrixXd UnscentedTransform::recoverCrossCorrelation(
+    void UnscentedTransform::recoverCrossCorrelation(
         const SigmaPoints &sigmaA,
         const Eigen::VectorXd &meanA,
-        const NormalizeFunc &normalizeA,
         const SigmaPoints &sigmaB,
         const Eigen::VectorXd &meanB,
-        const NormalizeFunc &normalizeB) const
+        Eigen::MatrixXd &outCrossCorrelation) const
     {
         assert(sigmaA.points.rows() == meanA.size());
         assert(sigmaB.points.rows() == meanB.size());
         assert(sigmaA.points.cols() == sigmaB.points.cols());
 
-        Eigen::MatrixXd result;
-        result.setZero(meanA.size(), meanB.size());
+        outCrossCorrelation.setZero(meanA.size(), meanB.size());
 
         for(unsigned int i = 0; i < sigmaA.points.cols(); ++i)
         {
-            // calculate normalized diff of A
             Eigen::VectorXd diffA = sigmaA.points.col(i) - meanA;
-            normalizeA(diffA);
-            // calculate normalized diff of B
             Eigen::VectorXd diffB = sigmaB.points.col(i) - meanB;
-            normalizeB(diffB);
-            result += sigmaA.weights(1, i) * diffA * diffB.transpose();
+            outCrossCorrelation +=
+                sigmaA.weights(1, i) * diffA * diffB.transpose();
         }
-
-        return result;
     }
 }

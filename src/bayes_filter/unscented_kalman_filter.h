@@ -21,15 +21,6 @@ namespace bf
 
         Eigen::VectorXd state_;
         Eigen::MatrixXd cov_;
-
-        Eigen::VectorXd calcMean(const SigmaPoints &sigma) const;
-        Eigen::VectorXd calcCovariance(
-            const SigmaPoints &sigma, const Eigen::VectorXd &mean) const;
-        Eigen::VectorXd calcCrossCovariance(const SigmaPoints &sigmaA,
-            const Eigen::VectorXd &meanA,
-            const SigmaPoints &sigmaB,
-            const Eigen::VectorXd &meanB) const;
-
     public:
         UnscentedKalmanFilter();
         UnscentedKalmanFilter(MotionModel *mm, SensorModel *sm);
@@ -37,8 +28,8 @@ namespace bf
 
         StateEstimate getEstimate() const override;
 
-        void init(
-            const Eigen::VectorXd &state, const Eigen::MatrixXd &cov) override;
+        void init(const Eigen::VectorXd &state,
+            const Eigen::MatrixXd &cov) override;
         void predict(const Eigen::VectorXd &controls,
             const Eigen::MatrixXd &observations,
             const Eigen::MatrixXd &noise) override;

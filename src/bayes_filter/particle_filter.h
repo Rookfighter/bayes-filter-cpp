@@ -53,8 +53,8 @@ namespace bf
          *  @return most likely state estimate */
         Eigen::VectorXd getMostLikely() const;
 
-        void init(
-            const Eigen::VectorXd &state, const Eigen::MatrixXd &cov) override;
+        void init(const Eigen::VectorXd &state,
+            const Eigen::MatrixXd &cov) override;
         void predict(const Eigen::VectorXd &controls,
             const Eigen::MatrixXd &observations,
             const Eigen::MatrixXd &noise) override;

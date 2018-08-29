@@ -14,9 +14,9 @@
 
 namespace bf
 {
-    constexpr double pi()
+    double pi()
     {
-        return std::atan(1.0) * 4.0;
+        return 3.1415926535897932384626433832795;
     }
 
     inline bool equals(double a, double b, double eps)
@@ -92,6 +92,36 @@ namespace bf
         }
 
         return result;
+    }
+
+    inline void computeWeightedMean(const Eigen::MatrixXd &data,
+        const Eigen::VectorXd &weights,
+        Eigen::VectorXd &outMean)
+    {
+        assert(data.cols() == weights.size());
+
+        outMean.setZero(data.rows());
+
+        for(unsigned int i = 0; i < data.cols(); ++i)
+            outMean += weights(i) * data.col(i);
+    }
+
+    inline void computeWeightedCovariance(const Eigen::MatrixXd &data,
+        const Eigen::VectorXd &weights,
+        const Eigen::VectorXd &mean,
+        Eigen::MatrixXd &outCov)
+    {
+        assert(data.cols() == weights.size());
+        assert(data.rows() == mean.size());
+
+        outCov.setZero(data.rows(), data.rows());
+
+        Eigen::VectorXd diff;
+        for(unsigned int i = 0; i < m.cols(); ++i)
+        {
+            diff = data.col(i) - mean;
+            outValue += weights(i) * diff * diff.transpose();
+        }
     }
 }
 

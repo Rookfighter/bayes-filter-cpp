@@ -39,15 +39,11 @@ namespace bf
             weights(i) = particles_[i].weight;
         }
 
-        Eigen::VectorXd state = meanOfStates(states, weights);
-        Eigen::MatrixXd cov(state.size(), state.size());
-        Eigen::VectorXd diff;
-        for(unsigned int i = 0; i < particles_.size(); ++i)
-        {
-            diff = particles_[i].state - state;
-            normalizeState(diff);
-            cov += particles_[i].weight * diff * diff.transpose();
-        }
+        Eigen::VectorXd mean;
+        computeWeightedMean(states, weights, mean);
+
+        Eigen::MatrixXd cov;
+        computeWeightedCovariance(states, weights, mean, cov);
 
         return {state, cov};
     }
@@ -92,7 +88,6 @@ namespace bf
 
         for(unsigned int i = 0; i < state.size(); ++i)
             result(i) = distribs[i](rndgen_);
-        normalizeState(result);
 
         return result;
     }
@@ -186,7 +181,6 @@ namespace bf
             p.state.resize(state.size());
             for(unsigned int i = 0; i < state.size(); ++i)
                 p.state(i) = distribs[i](rndgen_);
-            normalizeState(p.state);
         }
     }
 

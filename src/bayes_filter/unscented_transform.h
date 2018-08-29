@@ -27,20 +27,6 @@ namespace bf
         double beta_;
 
     public:
-        typedef std::function<void(Eigen::VectorXd &)> NormalizeFunc;
-        /** Function that calculates the rowwise mean of the given matrix. Each
-         *  column represents one sample / measurement / state. */
-        typedef std::function<Eigen::VectorXd(
-            const Eigen::MatrixXd &, const Eigen::VectorXd &)>
-            WeightedMeanFunc;
-
-        struct Result
-        {
-            Eigen::VectorXd state;
-            Eigen::MatrixXd cov;
-            Eigen::MatrixXd crossCov;
-        };
-
         UnscentedTransform();
         ~UnscentedTransform();
 
@@ -72,25 +58,25 @@ namespace bf
          *  @param cov covariance matrix, (state.size(), state.size())
          * dimensions
          *  @return set of sigma points and corresponding weights */
-        SigmaPoints calcSigmaPoints(const Eigen::VectorXd &state,
+        void calcSigmaPoints(const Eigen::VectorXd &state,
             const Eigen::MatrixXd &cov,
-            const NormalizeFunc &normalize) const;
+            const NormalizeFunc &normalize,
+            SigmaPoints &outSigma) const;
 
         /** Recovers the mean value from sigma points.
          *  @param sigma sigma points
-         *  @param normalize normalization function for a sigma point
          *  @return mean of the sigma points, normalized */
-        Eigen::VectorXd recoverMean(
-            const SigmaPoints &sigma, const WeightedMeanFunc &mean) const;
+        void recoverMean(const SigmaPoints &sigma,
+            Eigen::VectorXd &outMean) const;
 
         /** Recovers the covariance from sigma points.
          *  @param sigma sigma points
          *  @param mean mean value of the sigma points
          *  @param normalize normalization function for a sigma point
          *  @return covariance of the sigma points */
-        Eigen::MatrixXd recoverCovariance(const SigmaPoints &sigma,
+        void recoverCovariance(const SigmaPoints &sigma,
             const Eigen::VectorXd &mean,
-            const NormalizeFunc &normalize) const;
+            Eigen::MatrixXd &covariance) const;
 
         /** Calculates the cross correlation between two sets of sigma points.
          *  The resulting matrix is of dimension nA x nB.
@@ -103,12 +89,11 @@ namespace bf
          *  @param meanB mean value of sigmaB
          *  @param normalizeB normalization function for sigmaB
          *  @return cross correlation of the two sets (nA x nB) */
-        Eigen::MatrixXd recoverCrossCorrelation(const SigmaPoints &sigmaA,
+        void recoverCrossCorrelation(const SigmaPoints &sigmaA,
             const Eigen::VectorXd &meanA,
-            const NormalizeFunc &normalizeA,
             const SigmaPoints &sigmaB,
             const Eigen::VectorXd &meanB,
-            const NormalizeFunc &normalizeB) const;
+            Eigen::MatrixXd &crossCorrelation) const;
     };
 }
 

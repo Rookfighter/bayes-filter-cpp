@@ -27,8 +27,8 @@ namespace bf
         return {state_, cov_};
     }
 
-    void UnscentedKalmanFilter::init(
-        const Eigen::VectorXd &state, const Eigen::MatrixXd &cov)
+    void UnscentedKalmanFilter::init(const Eigen::VectorXd &state,
+        const Eigen::MatrixXd &cov)
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
@@ -45,28 +45,33 @@ namespace bf
         assert(state_.size() == noise.cols());
 
         // calculate sigma points
-        auto sigma = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
+        SigmaPoints sigma;
+        unscentTrans_.calcSigmaPoints(state_, cov_, normState_, sigma);
+
         // transform sigma points through motion model
+        Eigen::VectorXd value;
+        Eigen::MatrixXd jacobian;
         for(unsigned int i = 0; i < sigma.points.cols(); ++i)
         {
             // estimate new state for sigma point
-            auto mmResult = motionModel().estimateState(
-                sigma.points.col(i), controls, observations);
+            motionModel().estimateState(sigma.points.col(i), controls,
+                observations, value, jacobian);
             // normalize resulting state
-            normalizeState(mmResult.val);
-            sigma.points.col(i) = mmResult.val;
+            sigma.points.col(i) = value;
         }
 
-        auto mu = unscentTrans_.recoverMean(sigma, meanState_);
-        auto cov = unscentTrans_.recoverCovariance(sigma, mu, normState_);
+        Eigen::VectorXd mean;
+        Eigen::MatrixXd cov;
+        unscentTrans_.recoverMean(sigma, mean);
+        unscentTrans_.recoverCovariance(sigma, mean, cov);
 
         // update current state estimate
-        state_ = mu;
+        state_ = mean;
         cov_ = cov + noise * noise.transpose();
     }
 
-    void UnscentedKalmanFilter::correct(
-        const Eigen::MatrixXd &observations, const Eigen::MatrixXd &noise)
+    void UnscentedKalmanFilter::correct(const Eigen::MatrixXd &observations,
+        const Eigen::MatrixXd &noise)
     {
         assert(noise.rows() == noise.cols());
         assert(noise.rows() == observations.rows());
@@ -77,18 +82,10 @@ namespace bf
         // transform observation matrix into vector
         Eigen::VectorXd obs = mat2vec(observations);
 
-        // reshape noise (=single measurement stddev on main diagonal) into
-        // covariance matrix for all received observations
-        Eigen::MatrixXd obsCov;
-        obsCov.setZero(obs.size(), obs.size());
-        for(unsigned int i = 0; i < obs.size(); ++i)
-        {
-            unsigned int j = i % noise.rows();
-            obsCov(i, i) = noise(j, j) * noise(j, j);
-        }
-
         // calculate sigma points
-        auto sigmaA = unscentTrans_.calcSigmaPoints(state_, cov_, normState_);
+        SigmaPoints sigmaA;
+        unscentTrans_.calcSigmaPoints(state_, cov_, sigmaA);
+
         SigmaPoints sigmaB;
         sigmaB.points.resize(0, sigmaA.points.cols());
         sigmaB.weights = sigmaA.weights;
@@ -108,24 +105,33 @@ namespace bf
             sigmaB.points.col(i) = mat2vec(smResult.val);
         }
 
-        auto mu = unscentTrans_.recoverMean(sigmaB, meanObs_);
-        auto cov = unscentTrans_.recoverCovariance(sigmaB, mu, normObs_);
-        auto crossCov = unscentTrans_.recoverCrossCorrelation(
-            sigmaA, state_, normState_, sigmaB, mu, normObs_);
+        Eigen::VectorXd mean;
+        Eigen::MatrixXd cov;
+        Eigen::MatrixXd crossCov;
 
-        assert(mu.size() == obs.size());
-        assert(cov.rows() == obsCov.rows());
-        assert(cov.cols() == obsCov.cols());
+        unscentTrans_.recoverMean(sigmaB, mean);
+        unscentTrans_.recoverCovariance(sigmaB, mean, cov);
+        unscentTrans_.recoverCrossCorrelation(sigmaA, state_, sigmaB, mean,
+            crossCov);
+
+        assert(mean.size() == obs.size());
+        assert(cov.rows() == obs.size());
+        assert(cov.cols() == obs.size());
         assert(crossCov.rows() == state_.size());
         assert(crossCov.cols() == mu.size());
 
-        cov += obsCov;
+        // add noise to covariance
+        for(unsigned int i = 0; i < obs.size(); ++i)
+        {
+            unsigned int j = i % noise.rows();
+            cov(i, i) += noise(j, j) * noise(j, j);
+        }
+
         // calculate kalman gain
         Eigen::MatrixXd kalGain = crossCov * cov.inverse();
 
         // correct current state estimate
-        Eigen::MatrixXd diff = obs - mu;
-        normalizeObservations(diff);
+        Eigen::MatrixXd diff = obs - mean;
         state_ += kalGain * diff;
         cov_ -= kalGain * cov * kalGain.transpose();
     }

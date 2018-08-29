@@ -8,25 +8,43 @@
 #ifndef BFCPP_MODELS_H_
 #define BFCPP_MODELS_H_
 
-#include <Eigen/Dense>
-#include <iomanip>
-#include <sstream>
-#include <vector>
+#include <limits>
+#include <Eigen/Geometry>
 
 namespace bf
 {
+    /** Base class for motion models. It estimates the jacobian if no jacobian
+      * is given. */
     class MotionModel
     {
-    public:
-        /** The first component of a MotionModel::Result is the new state
-         * estimate. The second component is the Jacobian at the given
-         * point. */
-        struct Result
+    private:
+        void computeFiniteDifferences(const Eigen::VectorXd &state,
+            const Eigen::VectorXd &controls,
+            const Eigen::MatrixXd &observations,
+            const Eigen::VectorXd &value,
+            Eigen::MatrixXd &outJacobian,
+            const double diff) const
         {
-            Eigen::VectorXd val;
-            Eigen::MatrixXd jac;
-        };
+            Eigen::VectorXd stateTmp;
+            Eigen::VectorXd valueTmp;
+            Eigen::MatrixXd jacobianTmp;
 
+            outJacobian.resize(value.size(), state.size());
+
+            for(unsigned int i = 0; i < state.size(); ++i)
+            {
+                stateTmp = state;
+                stateTmp(i) += diff;
+
+                estimateState(stateTmp, controls, observations, valueTmp,
+                    jacobianTmp);
+                assert(valueTmp.size() == value.size());
+
+                outJacobian.col(i) = (valueTmp - value) / diff;
+            }
+        }
+
+    public:
         MotionModel()
         {}
         virtual ~MotionModel()
@@ -34,36 +52,102 @@ namespace bf
 
         /** Estimates a new state given the current state, controls,
          *  observations and time since last state.
+         *  If the jacobian is not calculated it will be estimated by a black
+         *  box approach.
          *  @param state current state vector
          *  @param controls current control vector
          *  @param observations matrix of observations
-         *  @return new state vector */
-        virtual Result estimateState(const Eigen::VectorXd &state,
+         *  @param outValue the estimated state
+         *  @param outJacobian the jacobian of the motion model */
+        virtual void _estimateState(const Eigen::VectorXd &state,
             const Eigen::VectorXd &controls,
-            const Eigen::MatrixXd &observations) const = 0;
+            const Eigen::MatrixXd &observations,
+            Eigen::VectorXd &outValue,
+            Eigen::MatrixXd &outJacobian) const = 0;
+
+        virtual void estimateState(const Eigen::VectorXd &state,
+            const Eigen::VectorXd &controls,
+            const Eigen::MatrixXd &observations,
+            Eigen::VectorXd &outValue,
+            Eigen::MatrixXd &outJacobian) const
+        {
+            static const double diff = std::sqrt(
+                std::numeric_limits<double>::epsilon());
+
+            outJacobian.resize(0, 0);
+
+            estimateState(state, controls, observations, outValue,
+                outJacobian);
+            if(outJacobian.size() == 0)
+            {
+                computeFiniteDifferences(state, controls, observations,
+                    outValue, outJacobian, diff);
+            }
+        }
     };
 
     class SensorModel
     {
+    private:
+        void computeFiniteDifferences(const Eigen::VectorXd &state,
+            const Eigen::MatrixXd &observations,
+            const Eigen::VectorXd &value,
+            Eigen::MatrixXd &outJacobian,
+            const double diff) const
+        {
+            Eigen::VectorXd stateTmp;
+            Eigen::VectorXd valueTmp;
+            Eigen::MatrixXd jacobianTmp;
+
+            outJacobian.resize(value.size(), state.size());
+
+            for(unsigned int i = 0; i < state.size(); ++i)
+            {
+                stateTmp = state;
+                stateTmp(i) += diff;
+
+                estimateState(stateTmp, observations, valueTmp, jacobianTmp);
+                assert(valueTmp.size() == value.size());
+
+                outJacobian.col(i) = (valueTmp - value) / diff;
+            }
+        }
     public:
         SensorModel()
         {}
         virtual ~SensorModel()
         {}
 
-        struct Result
-        {
-            Eigen::MatrixXd val;
-            Eigen::MatrixXd jac;
-        };
-
         /** Estimates observations given the current state,
          *  observations and absolute time of the system.
+         *  If the jacobian is not calculated it will be estimated by a black
+         *  box approach.
          *  @param state current state vector
          *  @param observations matrix of observations
-         *  @return observation estimate. */
-        virtual Result estimateObservations(const Eigen::VectorXd &state,
-            const Eigen::MatrixXd &observations) const = 0;
+         *  @param outValue the expected observations
+         *  @param outJacobian the jacobian of the sensor model (vectorized)*/
+        virtual void _estimateObservations(const Eigen::VectorXd &state,
+            const Eigen::MatrixXd &observations,
+            Eigen::MatrixXd &outValue,
+            Eigen::MatrixXd &outJacobian) const = 0;
+
+        virtual void estimateObservations(const Eigen::VectorXd &state,
+            const Eigen::MatrixXd &observations,
+            Eigen::MatrixXd &outValue,
+            Eigen::MatrixXd &outJacobian) const
+        {
+            static const double diff = std::sqrt(
+                std::numeric_limits<double>::epsilon());
+
+            outJacobian.resize(0, 0);
+
+            estimateState(state, observations, outValue, outJacobian);
+            if(outJacobian.size() == 0)
+            {
+                computeFiniteDifferences(state, observations, outValue,
+                    outJacobian, diff);
+            }
+        }
 
         /** Calculates the likelihood of p(z|x).
          *  @param pose current pose estimate

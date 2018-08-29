@@ -9,7 +9,6 @@
 #define BFCPP_BAYES_FILTER_H_
 
 #include "bayes_filter/models.h"
-#include <functional>
 
 namespace bf
 {
@@ -23,63 +22,58 @@ namespace bf
     /** Interface for bayes filter implementations. */
     class BayesFilter
     {
-    public:
-        /** Function that normalizes the input vector and returns normalized
-         *  version */
-        typedef std::function<void(Eigen::VectorXd &)> NormalizeFunc;
-        /** Function that calculates the rowwise mean of the given matrix. Each
-         *  column represents one sample / measurement / state. */
-        typedef std::function<Eigen::VectorXd(
-            const Eigen::MatrixXd &, const Eigen::VectorXd &)>
-            WeightedMeanFunc;
-
     protected:
         MotionModel *motionModel_;
         SensorModel *sensorModel_;
-
-        NormalizeFunc normState_;
-        NormalizeFunc normObs_;
-
-        WeightedMeanFunc meanState_;
-        WeightedMeanFunc meanObs_;
-
     public:
-        BayesFilter();
-        BayesFilter(MotionModel *mm, SensorModel *sm);
-        virtual ~BayesFilter();
+        BayesFilter()
+            : BayesFilter(nullptr, nullptr)
+        {}
+        BayesFilter(MotionModel *mm, SensorModel *sm)
+            : motionModel_(mm), sensorModel_(sm)
+        {}
+        virtual ~BayesFilter()
+        {
+            if(sensorModel_ != nullptr)
+                delete sensorModel_;
+            if(motionModel_ != nullptr)
+                delete motionModel_;
+        }
 
-        void setMotionModel(MotionModel *mm);
-        void setSensorModel(SensorModel *sm);
+        void setMotionModel(MotionModel *mm)
+        {
+            motionModel_ = mm;
+        }
 
-        MotionModel &motionModel();
-        const MotionModel &motionModel() const;
+        void setSensorModel(SensorModel *sm)
+        {
+            sensorModel_ = sm;
+        }
 
-        SensorModel &sensorModel();
-        const SensorModel &sensorModel() const;
+        MotionModel &motionModel()
+        {
+            return *motionModel_;
+        }
 
-        /** Set the normalization function for state vectors.
-         *  @param normalize normalization function */
-        void setNormalizeState(const NormalizeFunc &func);
+        const MotionModel &motionModel() const
+        {
+            return *motionModel_;
+        }
 
-        /** Set the normalization function for observation matrices.
-         *  @param normalize normalization function */
-        void setNormalizeObservation(const NormalizeFunc &func);
+        SensorModel &sensorModel()
+        {
+            return *sensorModel_;
+        }
 
-        void normalizeState(Eigen::VectorXd &state) const;
-        void normalizeObservations(Eigen::MatrixXd &observations) const;
-
-        void setMeanState(const WeightedMeanFunc &func);
-        void setMeanObservation(const WeightedMeanFunc &func);
-
-        Eigen::VectorXd meanOfStates(const Eigen::MatrixXd &states,
-            const Eigen::VectorXd &weights) const;
-        Eigen::VectorXd meanOfObservations(const Eigen::MatrixXd &observations,
-            const Eigen::VectorXd &weights) const;
+        const SensorModel &sensorModel() const
+        {
+            return *sensorModel_;
+        }
 
         /** Return the current estimated state vector of the filter and its
          *  covariance.
          *  @return state vector and covariance */
-        virtual StateEstimate getEstimate() const = 0;
+        virtual StateEstimate getEstimate() const = 0
 
         /** Initialize the filter with the given state vector and covariance.
          *  @param state initial state vector of size Nx1
@@ -115,7 +109,11 @@ namespace bf
         void update(const Eigen::VectorXd &controls,
             const Eigen::MatrixXd &observations,
             const Eigen::MatrixXd &motionNoise,
-            const Eigen::MatrixXd &sensorNoise);
+            const Eigen::MatrixXd &sensorNoise)
+        {
+            predict(controls, observations, motionNoise);
+            correct(observations, sensorNoise);
+        }
     };
 }
 
