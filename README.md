@@ -27,8 +27,8 @@ On Debian based systems you can install Eigen3 via apt:
 apt-get install libeigen3-dev
 ```
 
-Then you can simply copy the header files into your project or install
-them using the CMake build system.
+Then you can simply copy the source files into your project or install
+the library using the CMake build system.
 
 ```bash
 cd path/to/repo
