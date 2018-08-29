@@ -29,8 +29,8 @@ namespace bf
         ParticleSet particles_;
         std::default_random_engine rndgen_;
 
-        Eigen::VectorXd randomizeState(
-            const Eigen::VectorXd &state, const Eigen::MatrixXd &noise);
+        void randomizeState(Eigen::VectorXd &state,
+            const Eigen::MatrixXd &noise);
         void normalizeWeight();
 
         /** Calculates the number of effective particles as: 1 / sum(weight^2).

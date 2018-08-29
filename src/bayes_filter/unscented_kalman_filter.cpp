@@ -46,7 +46,7 @@ namespace bf
 
         // calculate sigma points
         SigmaPoints sigma;
-        unscentTrans_.calcSigmaPoints(state_, cov_, normState_, sigma);
+        unscentTrans_.calcSigmaPoints(state_, cov_, sigma);
 
         // transform sigma points through motion model
         Eigen::VectorXd value;
@@ -91,18 +91,18 @@ namespace bf
         sigmaB.weights = sigmaA.weights;
 
         // transform sigma points through sensor model
+        Eigen::MatrixXd value;
+        Eigen::MatrixXd jacobian;
         for(unsigned int i = 0; i < sigmaA.points.cols(); ++i)
         {
             // estimate observation for this sigma point
-            auto smResult = sensorModel().estimateObservations(
-                sigmaA.points.col(i), observations);
+            sensorModel().estimateObservations(sigmaA.points.col(i),
+                observations, value, jacobian);
             // if sigmaB was not initialized init it now
-            if(sigmaB.points.rows() < smResult.val.size())
-            {
-                sigmaB.points.resize(smResult.val.size(), sigmaA.points.cols());
-            }
+            if(sigmaB.points.rows() < value.size())
+                sigmaB.points.resize(value.size(), sigmaA.points.cols());
             // reshape resulting observations
-            sigmaB.points.col(i) = mat2vec(smResult.val);
+            sigmaB.points.col(i) = mat2vec(value);
         }
 
         Eigen::VectorXd mean;
@@ -118,7 +118,7 @@ namespace bf
         assert(cov.rows() == obs.size());
         assert(cov.cols() == obs.size());
         assert(crossCov.rows() == state_.size());
-        assert(crossCov.cols() == mu.size());
+        assert(crossCov.cols() == mean.size());
 
         // add noise to covariance
         for(unsigned int i = 0; i < obs.size(); ++i)

@@ -73,7 +73,7 @@ namespace bf
         /** Return the current estimated state vector of the filter and its
          *  covariance.
          *  @return state vector and covariance */
-        virtual StateEstimate getEstimate() const = 0
+        virtual StateEstimate getEstimate() const = 0;
 
         /** Initialize the filter with the given state vector and covariance.
          *  @param state initial state vector of size Nx1

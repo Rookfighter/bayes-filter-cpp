@@ -18,15 +18,14 @@ public:
     ~IdentityMotionModel()
     {}
 
-    Result estimateState(const Eigen::VectorXd &state,
+    void _estimateState(const Eigen::VectorXd &state,
         const Eigen::VectorXd &,
-        const Eigen::MatrixXd &) const override
+        const Eigen::MatrixXd &,
+        Eigen::VectorXd &outValue,
+        Eigen::MatrixXd &outJacobian) const override
     {
-        Result result;
-        result.val = state;
-        result.jac = Eigen::MatrixXd::Identity(state.size(), state.size());
-
-        return result;
+        outValue = state;
+        outJacobian = Eigen::MatrixXd::Identity(state.size(), state.size());
     }
 };
 
@@ -38,15 +37,14 @@ public:
     ~IdentitySensorModel()
     {}
 
-    Result estimateObservations(const Eigen::VectorXd &state,
-        const Eigen::MatrixXd &observations) const override
+    void _estimateObservations(const Eigen::VectorXd &state,
+        const Eigen::MatrixXd &observations,
+        Eigen::MatrixXd &outValue,
+        Eigen::MatrixXd &outJacobian) const override
     {
-        Result result;
-        result.val = observations;
-        result.jac =
+        outValue = observations;
+        outJacobian =
             Eigen::MatrixXd::Identity(observations.size(), state.size());
-
-        return result;
     }
 
     double likelihood(const Eigen::VectorXd &,
@@ -65,9 +63,11 @@ public:
     ~ConstVelMotionModel()
     {}
 
-    Result estimateState(const Eigen::VectorXd &state,
+    void _estimateState(const Eigen::VectorXd &state,
         const Eigen::VectorXd &controls,
-        const Eigen::MatrixXd &) const override
+        const Eigen::MatrixXd &,
+        Eigen::VectorXd &outValue,
+        Eigen::MatrixXd &outJacobian) const override
     {
         assert(state.size() == 4);
         assert(controls.size() == 1);
@@ -76,14 +76,11 @@ public:
         Eigen::Vector2d pos(state(0), state(1));
         Eigen::Vector2d vel(state(2), state(3));
 
-        Result result;
-        result.val.resize(state.size());
-        result.val << pos(0) + vel(0) * dt, pos(1) + vel(1) * dt, vel(0),
+        outValue.resize(state.size());
+        outValue << pos(0) + vel(0) * dt, pos(1) + vel(1) * dt, vel(0),
             vel(1);
-        result.jac.resize(state.size(), state.size());
-        result.jac << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
-
-        return result;
+        outJacobian.resize(state.size(), state.size());
+        outJacobian << 1, 0, dt, 0, 0, 1, 0, dt, 0, 0, 1, 0, 0, 0, 0, 1;
     }
 };
 

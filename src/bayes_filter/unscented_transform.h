@@ -60,7 +60,6 @@ namespace bf
          *  @return set of sigma points and corresponding weights */
         void calcSigmaPoints(const Eigen::VectorXd &state,
             const Eigen::MatrixXd &cov,
-            const NormalizeFunc &normalize,
             SigmaPoints &outSigma) const;
 
         /** Recovers the mean value from sigma points.

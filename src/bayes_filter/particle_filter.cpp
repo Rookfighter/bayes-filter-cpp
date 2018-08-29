@@ -45,7 +45,7 @@ namespace bf
         Eigen::MatrixXd cov;
         computeWeightedCovariance(states, weights, mean, cov);
 
-        return {state, cov};
+        return {mean, cov};
     }
 
     Eigen::VectorXd ParticleFilter::getMostLikely() const
@@ -70,14 +70,12 @@ namespace bf
         return particles_;
     }
 
-    Eigen::VectorXd ParticleFilter::randomizeState(
-        const Eigen::VectorXd &state, const Eigen::MatrixXd &noise)
+    void ParticleFilter::randomizeState(
+        Eigen::VectorXd &state, const Eigen::MatrixXd &noise)
     {
         // noise matrix main diagonal holds stddev not variance!
         assert(state.size() == noise.cols());
         assert(state.size() == noise.rows());
-
-        Eigen::VectorXd result(state.size());
 
         std::vector<std::normal_distribution<double>> distribs(state.size());
         for(unsigned int i = 0; i < state.size(); ++i)
@@ -87,9 +85,7 @@ namespace bf
         }
 
         for(unsigned int i = 0; i < state.size(); ++i)
-            result(i) = distribs[i](rndgen_);
-
-        return result;
+            state(i) = distribs[i](rndgen_);
     }
 
     void ParticleFilter::normalizeWeight()
@@ -191,12 +187,12 @@ namespace bf
         assert(particles_.front().state.size() == noise.rows());
         assert(particles_.front().state.size() == noise.cols());
 
+        Eigen::MatrixXd jacobian;
         for(Particle &p : particles_)
         {
-            p.state = motionModel()
-                          .estimateState(p.state, controls, observations)
-                          .val;
-            p.state = randomizeState(p.state, noise);
+             motionModel().estimateState(p.state, controls, observations,
+                 p.state, jacobian);
+            randomizeState(p.state, noise);
         }
     }
 

@@ -10,6 +10,7 @@
 
 #include <limits>
 #include <Eigen/Geometry>
+#include "bayes_filter/math.h"
 
 namespace bf
 {
@@ -36,7 +37,7 @@ namespace bf
                 stateTmp = state;
                 stateTmp(i) += diff;
 
-                estimateState(stateTmp, controls, observations, valueTmp,
+                _estimateState(stateTmp, controls, observations, valueTmp,
                     jacobianTmp);
                 assert(valueTmp.size() == value.size());
 
@@ -76,7 +77,7 @@ namespace bf
 
             outJacobian.resize(0, 0);
 
-            estimateState(state, controls, observations, outValue,
+            _estimateState(state, controls, observations, outValue,
                 outJacobian);
             if(outJacobian.size() == 0)
             {
@@ -96,7 +97,7 @@ namespace bf
             const double diff) const
         {
             Eigen::VectorXd stateTmp;
-            Eigen::VectorXd valueTmp;
+            Eigen::MatrixXd valueTmp;
             Eigen::MatrixXd jacobianTmp;
 
             outJacobian.resize(value.size(), state.size());
@@ -106,10 +107,10 @@ namespace bf
                 stateTmp = state;
                 stateTmp(i) += diff;
 
-                estimateState(stateTmp, observations, valueTmp, jacobianTmp);
+                _estimateObservations(stateTmp, observations, valueTmp, jacobianTmp);
                 assert(valueTmp.size() == value.size());
 
-                outJacobian.col(i) = (valueTmp - value) / diff;
+                outJacobian.col(i) = mat2vec(valueTmp - value) / diff;
             }
         }
     public:
@@ -141,7 +142,7 @@ namespace bf
 
             outJacobian.resize(0, 0);
 
-            estimateState(state, observations, outValue, outJacobian);
+            _estimateObservations(state, observations, outValue, outJacobian);
             if(outJacobian.size() == 0)
             {
                 computeFiniteDifferences(state, observations, outValue,

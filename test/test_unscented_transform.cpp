@@ -12,22 +12,6 @@
 using namespace bf;
 using namespace std::placeholders;
 
-static void noNormalize(Eigen::VectorXd &)
-{}
-
-static Eigen::VectorXd rowwiseMean(
-    const Eigen::MatrixXd &m, const Eigen::VectorXd &w)
-{
-    assert(m.cols() == w.size());
-
-    Eigen::VectorXd result;
-    result.setZero(m.rows());
-    for(unsigned int i = 0; i < m.cols(); ++i)
-        result += w(i) * m.col(i);
-
-    return result;
-}
-
 static Eigen::VectorXd linearTransform(
     const Eigen::VectorXd &state, const Eigen::VectorXd &facs)
 {
@@ -77,11 +61,6 @@ TEST_CASE("Unscented Transform")
     {
         const double eps = 1e-6;
         UnscentedTransform trans;
-        UnscentedTransform::NormalizeFunc normalize =
-            std::bind(&noNormalize, _1);
-
-        UnscentedTransform::WeightedMeanFunc mean =
-            std::bind(&rowwiseMean, _1, _2);
 
         SECTION("with simple params")
         {
@@ -102,11 +81,12 @@ TEST_CASE("Unscented Transform")
             sexp << 1, 3, 1, 1, -1, 1, 1, 1, 1, 3, 1, 1, -1, 1, 1, 1, 1, 3, 1,
                 1, -1;
 
-            auto result = trans.calcSigmaPoints(state, cov, normalize);
+            SigmaPoints sigma;
+            trans.calcSigmaPoints(state, cov, sigma);
 
             REQUIRE(trans.calcLambda(state.size()) == Approx(1.0).margin(eps));
-            REQUIRE_MAT(wexp, result.weights, eps);
-            REQUIRE_MAT(sexp, result.points, eps);
+            REQUIRE_MAT(wexp, sigma.weights, eps);
+            REQUIRE_MAT(sexp, sigma.points, eps);
         }
 
         SECTION("with different params")
@@ -127,11 +107,12 @@ TEST_CASE("Unscented Transform")
             Eigen::MatrixXd sexp(2, 5);
             sexp << 1, 3, 1, -1, 1, 1, 1, 3, 1, -1;
 
-            auto result = trans.calcSigmaPoints(state, cov, normalize);
+            SigmaPoints sigma;
+            trans.calcSigmaPoints(state, cov, sigma);
 
             REQUIRE(trans.calcLambda(state.size()) == Approx(2.0).margin(eps));
-            REQUIRE_MAT(wexp, result.weights, eps);
-            REQUIRE_MAT(sexp, result.points, eps);
+            REQUIRE_MAT(wexp, sigma.weights, eps);
+            REQUIRE_MAT(sexp, sigma.points, eps);
         }
 
         SECTION("with zero uncertainty")
@@ -153,11 +134,12 @@ TEST_CASE("Unscented Transform")
             sexp << 1, 3, 1, 1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 1;
 
-            auto result = trans.calcSigmaPoints(state, cov, normalize);
+            SigmaPoints sigma;
+            trans.calcSigmaPoints(state, cov, sigma);
 
             REQUIRE(trans.calcLambda(state.size()) == Approx(1.0).margin(eps));
-            REQUIRE_MAT(wexp, result.weights, eps);
-            REQUIRE_MAT(sexp, result.points, eps);
+            REQUIRE_MAT(wexp, sigma.weights, eps);
+            REQUIRE_MAT(sexp, sigma.points, eps);
         }
     }
 
@@ -169,10 +151,6 @@ TEST_CASE("Unscented Transform")
     {
         const double eps = 1e-6;
         UnscentedTransform trans;
-        UnscentedTransform::NormalizeFunc normalize =
-            std::bind(&noNormalize, _1);
-        UnscentedTransform::WeightedMeanFunc mean =
-            std::bind(&rowwiseMean, _1, _2);
 
         SECTION("with identity transform")
         {
@@ -181,9 +159,13 @@ TEST_CASE("Unscented Transform")
             Eigen::MatrixXd cov(3, 3);
             cov << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 
-            auto sigma = trans.calcSigmaPoints(state, cov, normalize);
-            auto actMu = trans.recoverMean(sigma, mean);
-            auto actCov = trans.recoverCovariance(sigma, actMu, normalize);
+            SigmaPoints sigma;
+            Eigen::VectorXd actMu;
+            Eigen::MatrixXd actCov;
+
+            trans.calcSigmaPoints(state, cov, sigma);
+            trans.recoverMean(sigma, actMu);
+            trans.recoverCovariance(sigma, actMu, actCov);
 
             REQUIRE_MAT(state, actMu, eps);
             REQUIRE_MAT(cov, actCov, eps);
@@ -196,9 +178,13 @@ TEST_CASE("Unscented Transform")
             Eigen::MatrixXd cov(3, 3);
             cov << 1e-16, 0, 0, 0, 1, 0, 0, 0, 1e-16;
 
-            auto sigma = trans.calcSigmaPoints(state, cov, normalize);
-            auto actMu = trans.recoverMean(sigma, mean);
-            auto actCov = trans.recoverCovariance(sigma, actMu, normalize);
+            SigmaPoints sigma;
+            Eigen::VectorXd actMu;
+            Eigen::MatrixXd actCov;
+
+            trans.calcSigmaPoints(state, cov, sigma);
+            trans.recoverMean(sigma, actMu);
+            trans.recoverCovariance(sigma, actMu, actCov);
 
             REQUIRE_MAT(state, actMu, eps);
             REQUIRE_MAT(cov, actCov, eps);
@@ -213,11 +199,14 @@ TEST_CASE("Unscented Transform")
             Eigen::VectorXd facs(3);
             facs << 1, 2, 3;
 
-            auto sigma = trans.calcSigmaPoints(state, cov, normalize);
-            sigma = linearTransformSig(sigma, facs);
+            SigmaPoints sigma;
+            Eigen::VectorXd actMu;
+            Eigen::MatrixXd actCov;
 
-            auto actMu = trans.recoverMean(sigma, mean);
-            auto actCov = trans.recoverCovariance(sigma, actMu, normalize);
+            trans.calcSigmaPoints(state, cov, sigma);
+            sigma = linearTransformSig(sigma, facs);
+            trans.recoverMean(sigma, actMu);
+            trans.recoverCovariance(sigma, actMu, actCov);
 
             state = linearTransform(state, facs);
             cov = linearTransformCov(cov, facs);
@@ -235,11 +224,14 @@ TEST_CASE("Unscented Transform")
             Eigen::VectorXd facs(3);
             facs << 1, 2, 3;
 
-            auto sigma = trans.calcSigmaPoints(state, cov, normalize);
-            sigma = linearTransformSig(sigma, facs);
+            SigmaPoints sigma;
+            Eigen::VectorXd actMu;
+            Eigen::MatrixXd actCov;
 
-            auto actMu = trans.recoverMean(sigma, mean);
-            auto actCov = trans.recoverCovariance(sigma, actMu, normalize);
+            trans.calcSigmaPoints(state, cov, sigma);
+            sigma = linearTransformSig(sigma, facs);
+            trans.recoverMean(sigma, actMu);
+            trans.recoverCovariance(sigma, actMu, actCov);
 
             state = linearTransform(state, facs);
             cov = linearTransformCov(cov, facs);
@@ -257,8 +249,6 @@ TEST_CASE("Unscented Transform")
     {
         const double eps = 1e-6;
         UnscentedTransform trans;
-        UnscentedTransform::NormalizeFunc normalize =
-            std::bind(&noNormalize, _1);
 
         SECTION("with identity transform")
         {
@@ -267,9 +257,12 @@ TEST_CASE("Unscented Transform")
             Eigen::MatrixXd cov(3, 3);
             cov << 1, 0, 0, 0, 1, 0, 0, 0, 1;
 
-            auto sigma = trans.calcSigmaPoints(state, cov, normalize);
-            auto actCrossCov = trans.recoverCrossCorrelation(
-                sigma, state, normalize, sigma, state, normalize);
+            SigmaPoints sigma;
+            Eigen::MatrixXd actCrossCov;
+
+            trans.calcSigmaPoints(state, cov, sigma);
+            trans.recoverCrossCorrelation(sigma, state, sigma, state,
+                actCrossCov);
 
             REQUIRE_MAT(cov, actCrossCov, eps);
         }
@@ -287,10 +280,14 @@ TEST_CASE("Unscented Transform")
             Eigen::MatrixXd crossCov(3, 3);
             crossCov << 1, 0, 0, 0, 2, 0, 0, 0, 3;
 
-            auto sigma1 = trans.calcSigmaPoints(state1, cov, normalize);
-            auto sigma2 = linearTransformSig(sigma1, facs);
-            auto actCrossCov = trans.recoverCrossCorrelation(
-                sigma1, state1, normalize, sigma2, state2, normalize);
+            SigmaPoints sigma1;
+            SigmaPoints sigma2;
+            Eigen::MatrixXd actCrossCov;
+
+            trans.calcSigmaPoints(state1, cov, sigma1);
+            sigma2 = linearTransformSig(sigma1, facs);
+            trans.recoverCrossCorrelation(sigma1, state1, sigma2, state2,
+                actCrossCov);
 
             REQUIRE_MAT(crossCov, actCrossCov, eps);
         }
@@ -308,10 +305,14 @@ TEST_CASE("Unscented Transform")
             Eigen::MatrixXd crossCov(3, 3);
             crossCov << 0, 0, 0, 0, 2, 0, 0, 0, 0;
 
-            auto sigma1 = trans.calcSigmaPoints(state1, cov, normalize);
-            auto sigma2 = linearTransformSig(sigma1, facs);
-            auto actCrossCov = trans.recoverCrossCorrelation(
-                sigma1, state1, normalize, sigma2, state2, normalize);
+            SigmaPoints sigma1;
+            SigmaPoints sigma2;
+            Eigen::MatrixXd actCrossCov;
+
+            trans.calcSigmaPoints(state1, cov, sigma1);
+            sigma2 = linearTransformSig(sigma1, facs);
+            trans.recoverCrossCorrelation(sigma1, state1, sigma2, state2,
+                actCrossCov);
 
             REQUIRE_MAT(crossCov, actCrossCov, eps);
         }

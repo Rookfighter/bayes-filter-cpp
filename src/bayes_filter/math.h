@@ -14,7 +14,7 @@
 
 namespace bf
 {
-    double pi()
+    inline double pi()
     {
         return 3.1415926535897932384626433832795;
     }
@@ -117,10 +117,10 @@ namespace bf
         outCov.setZero(data.rows(), data.rows());
 
         Eigen::VectorXd diff;
-        for(unsigned int i = 0; i < m.cols(); ++i)
+        for(unsigned int i = 0; i < data.cols(); ++i)
         {
             diff = data.col(i) - mean;
-            outValue += weights(i) * diff * diff.transpose();
+            outCov += weights(i) * diff * diff.transpose();
         }
     }
 }

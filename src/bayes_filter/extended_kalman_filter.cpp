@@ -28,7 +28,7 @@ namespace bf
     {
         assert(state.size() == cov.rows());
         assert(state.size() == cov.cols());
-        
+
         state_ = state;
         cov_ = cov;
     }
@@ -86,9 +86,9 @@ namespace bf
 
         // calculate kalman gain
         Eigen::MatrixXd kalGain = cov_ * jacobian.transpose() * tmp;
-        Eigen::VectorXd diff = mat2vec(observations - result.val);
+        Eigen::VectorXd diff = mat2vec(observations - value);
 
         state_ += kalGain * diff;
-        cov_ -= kalGain * result.jac * cov_;
+        cov_ -= kalGain * jacobian * cov_;
     }
 }
