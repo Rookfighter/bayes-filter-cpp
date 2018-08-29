@@ -187,7 +187,7 @@ namespace bf
         assert(particles_.front().state.size() == noise.rows());
         assert(particles_.front().state.size() == noise.cols());
 
-        Eigen::Vectorxd value;
+        Eigen::VectorXd value;
         Eigen::MatrixXd jacobian;
         for(Particle &p : particles_)
         {
