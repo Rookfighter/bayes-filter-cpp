@@ -1,7 +1,11 @@
-# Bayes Filter Cpp
+# bayes-filter-cpp
 
-Bayes Filter Cpp is a basic C++ library for bayes filters. It provides bayes
-filter implementations, such as
+![Cpp11](https://img.shields.io/badge/C%2B%2B-11-blue.svg)
+![License](https://img.shields.io/packagist/l/doctrine/orm.svg)
+![Travis Status](https://travis-ci.org/Rookfighter/bayes-filter-cpp.svg?branch=master)
+![Appveyer Status](https://ci.appveyor.com/api/projects/status/kb1lydcuywyurj5r?svg=true)
+
+bayes-filter-cpp is a C++ library implementing recursive bayes filters for state estimation. It provides the following filters:
 
 * Particle Filter
 * Unscented Kalman Filter
@@ -9,25 +13,31 @@ filter implementations, such as
 
 ## Install
 
-First download the dependencies locally as git submodules.
+The library has the following dependencies:
+
+* [Eigen3](https://eigen.tuxfamily.org/index.php?title=Main_Page)
+
+Make sure these are installed on your system and/or can be found by your build
+system. For ease of use the header-only dependencies are included as
+submodules.
+
+On Debian based systems you can install Eigen3 via apt:
 
 ```bash
-cd <path-to-repo>
-git submodule update --init --recursive
+apt-get install libeigen3-dev
 ```
 
-Then build the library with CMake by running
+Then you can simply copy the header files into your project or install
+them using the CMake build system.
 
 ```bash
-cd <path-to-repo>
+cd path/to/repo
+git submodule update --init
 mkdir build
 cd build
 cmake ..
-make
+make install
 ```
-
-Or you can simply copy the source into your project and build it with the build
-system of your choice. Keep in mind that this requires Eigen3 as dependency.
 
 ## Usage
 
