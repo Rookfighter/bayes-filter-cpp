@@ -187,11 +187,13 @@ namespace bf
         assert(particles_.front().state.size() == noise.rows());
         assert(particles_.front().state.size() == noise.cols());
 
+        Eigen::Vectorxd value;
         Eigen::MatrixXd jacobian;
         for(Particle &p : particles_)
         {
-             motionModel().estimateState(p.state, controls, observations,
-                 p.state, jacobian);
+            motionModel().estimateState(p.state, controls, observations,
+                 value, jacobian);
+            p.state = value;
             randomizeState(p.state, noise);
         }
     }
