@@ -4,11 +4,14 @@
 # Created On: 23 May 2018
 
 cmake_minimum_required(VERSION 3.5)
-project(bayes-filter-cpp)
+project(bfcpp)
 
 SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra")
+endif(CMAKE_COMPILER_IS_GNUCXX)
 
 set(BFCPP_LIBRARY bfcpp)
 
@@ -27,7 +30,7 @@ add_library(${BFCPP_LIBRARY} ${SRC})
 install(TARGETS ${BFCPP_LIBRARY}
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib)
-install(DIRECTORY src/bayes_cpp
+install(DIRECTORY src/bayes_filter
         DESTINATION include
         FILES_MATCHING PATTERN "*.h")
 
