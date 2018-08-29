@@ -18,7 +18,7 @@ TEST_CASE("Particle Filter")
     SECTION("initialize")
     {
         ParticleFilter pf(new IdentityMotionModel(), new IdentitySensorModel());
-        pf.setParticleCount(10000);
+        pf.setParticleCount(50000);
         pf.setSeed(0);
 
         Eigen::VectorXd state(3);
