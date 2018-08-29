@@ -26,49 +26,18 @@ namespace bf
         MotionModel *motionModel_;
         SensorModel *sensorModel_;
     public:
-        BayesFilter()
-            : BayesFilter(nullptr, nullptr)
-        {}
-        BayesFilter(MotionModel *mm, SensorModel *sm)
-            : motionModel_(mm), sensorModel_(sm)
-        {}
-        virtual ~BayesFilter()
-        {
-            if(sensorModel_ != nullptr)
-                delete sensorModel_;
-            if(motionModel_ != nullptr)
-                delete motionModel_;
-        }
+        BayesFilter();
+        BayesFilter(MotionModel *mm, SensorModel *sm);
+        virtual ~BayesFilter();
 
-        void setMotionModel(MotionModel *mm)
-        {
-            motionModel_ = mm;
-        }
+        void setMotionModel(MotionModel *mm);
+        void setSensorModel(SensorModel *sm);
 
-        void setSensorModel(SensorModel *sm)
-        {
-            sensorModel_ = sm;
-        }
+        MotionModel &motionModel();
+        const MotionModel &motionModel() const;
 
-        MotionModel &motionModel()
-        {
-            return *motionModel_;
-        }
-
-        const MotionModel &motionModel() const
-        {
-            return *motionModel_;
-        }
-
-        SensorModel &sensorModel()
-        {
-            return *sensorModel_;
-        }
-
-        const SensorModel &sensorModel() const
-        {
-            return *sensorModel_;
-        }
+        SensorModel &sensorModel();
+        const SensorModel &sensorModel() const;
 
         /** Return the current estimated state vector of the filter and its
          *  covariance.
@@ -78,8 +47,8 @@ namespace bf
         /** Initialize the filter with the given state vector and covariance.
          *  @param state initial state vector of size Nx1
          *  @param cov initial covariance of size NxN*/
-        virtual void init(
-            const Eigen::VectorXd &state, const Eigen::MatrixXd &cov) = 0;
+        virtual void init(const Eigen::VectorXd &state,
+            const Eigen::MatrixXd &cov) = 0;
 
         /** Execute prediction step of the bayes filter with the motion model.
          *  @param controls control vector
@@ -109,11 +78,7 @@ namespace bf
         void update(const Eigen::VectorXd &controls,
             const Eigen::MatrixXd &observations,
             const Eigen::MatrixXd &motionNoise,
-            const Eigen::MatrixXd &sensorNoise)
-        {
-            predict(controls, observations, motionNoise);
-            correct(observations, sensorNoise);
-        }
+            const Eigen::MatrixXd &sensorNoise);
     };
 }
 

@@ -6,6 +6,7 @@
  */
 
 #include "bayes_filter/extended_kalman_filter.h"
+#include "bayes_filter/math.h"
 
 namespace bf
 {

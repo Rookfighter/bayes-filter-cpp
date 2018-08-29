@@ -8,9 +8,7 @@
 #ifndef BFCPP_MODELS_H_
 #define BFCPP_MODELS_H_
 
-#include <limits>
 #include <Eigen/Geometry>
-#include "bayes_filter/math.h"
 
 namespace bf
 {
@@ -24,32 +22,11 @@ namespace bf
             const Eigen::MatrixXd &observations,
             const Eigen::VectorXd &value,
             Eigen::MatrixXd &outJacobian,
-            const double diff) const
-        {
-            Eigen::VectorXd stateTmp;
-            Eigen::VectorXd valueTmp;
-            Eigen::MatrixXd jacobianTmp;
-
-            outJacobian.resize(value.size(), state.size());
-
-            for(unsigned int i = 0; i < state.size(); ++i)
-            {
-                stateTmp = state;
-                stateTmp(i) += diff;
-
-                _estimateState(stateTmp, controls, observations, valueTmp,
-                    jacobianTmp);
-                assert(valueTmp.size() == value.size());
-
-                outJacobian.col(i) = (valueTmp - value) / diff;
-            }
-        }
+            const double diff) const;
 
     public:
-        MotionModel()
-        {}
-        virtual ~MotionModel()
-        {}
+        MotionModel();
+        virtual ~MotionModel();
 
         /** Estimates a new state given the current state, controls,
          *  observations and time since last state.
@@ -70,21 +47,7 @@ namespace bf
             const Eigen::VectorXd &controls,
             const Eigen::MatrixXd &observations,
             Eigen::VectorXd &outValue,
-            Eigen::MatrixXd &outJacobian) const
-        {
-            static const double diff = std::sqrt(
-                std::numeric_limits<double>::epsilon());
-
-            outJacobian.resize(0, 0);
-
-            _estimateState(state, controls, observations, outValue,
-                outJacobian);
-            if(outJacobian.size() == 0)
-            {
-                computeFiniteDifferences(state, controls, observations,
-                    outValue, outJacobian, diff);
-            }
-        }
+            Eigen::MatrixXd &outJacobian) const;
     };
 
     class SensorModel
@@ -94,30 +57,10 @@ namespace bf
             const Eigen::MatrixXd &observations,
             const Eigen::VectorXd &value,
             Eigen::MatrixXd &outJacobian,
-            const double diff) const
-        {
-            Eigen::VectorXd stateTmp;
-            Eigen::MatrixXd valueTmp;
-            Eigen::MatrixXd jacobianTmp;
-
-            outJacobian.resize(value.size(), state.size());
-
-            for(unsigned int i = 0; i < state.size(); ++i)
-            {
-                stateTmp = state;
-                stateTmp(i) += diff;
-
-                _estimateObservations(stateTmp, observations, valueTmp, jacobianTmp);
-                assert(valueTmp.size() == value.size());
-
-                outJacobian.col(i) = mat2vec(valueTmp - value) / diff;
-            }
-        }
+            const double diff) const;
     public:
-        SensorModel()
-        {}
-        virtual ~SensorModel()
-        {}
+        SensorModel();
+        virtual ~SensorModel();
 
         /** Estimates observations given the current state,
          *  observations and absolute time of the system.
@@ -135,20 +78,7 @@ namespace bf
         virtual void estimateObservations(const Eigen::VectorXd &state,
             const Eigen::MatrixXd &observations,
             Eigen::MatrixXd &outValue,
-            Eigen::MatrixXd &outJacobian) const
-        {
-            static const double diff = std::sqrt(
-                std::numeric_limits<double>::epsilon());
-
-            outJacobian.resize(0, 0);
-
-            _estimateObservations(state, observations, outValue, outJacobian);
-            if(outJacobian.size() == 0)
-            {
-                computeFiniteDifferences(state, observations, outValue,
-                    outJacobian, diff);
-            }
-        }
+            Eigen::MatrixXd &outJacobian) const;
 
         /** Calculates the likelihood of p(z|x).
          *  @param pose current pose estimate
