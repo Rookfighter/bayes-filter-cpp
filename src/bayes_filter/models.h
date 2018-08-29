@@ -55,7 +55,7 @@ namespace bf
     private:
         void computeFiniteDifferences(const Eigen::VectorXd &state,
             const Eigen::MatrixXd &observations,
-            const Eigen::VectorXd &value,
+            const Eigen::MatrixXd &value,
             Eigen::MatrixXd &outJacobian,
             const double diff) const;
     public:
