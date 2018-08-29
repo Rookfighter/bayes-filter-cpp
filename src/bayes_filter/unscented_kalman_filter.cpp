@@ -44,6 +44,8 @@ namespace bf
         assert(state_.size() == noise.rows());
         assert(state_.size() == noise.cols());
 
+        motionModel().setCalculateJacobian(false);
+
         // calculate sigma points
         SigmaPoints sigma;
         unscentTrans_.calcSigmaPoints(state_, cov_, sigma);
@@ -75,6 +77,8 @@ namespace bf
     {
         assert(noise.rows() == noise.cols());
         assert(noise.rows() == observations.rows());
+
+        sensorModel().setCalculateJacobian(false);
 
         if(observations.cols() == 0)
             return;

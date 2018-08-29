@@ -41,6 +41,8 @@ namespace bf
         assert(noise.cols() == cov_.cols());
         assert(noise.rows() == cov_.rows());
 
+        motionModel().setCalculateJacobian(true);
+
         Eigen::VectorXd value;
         Eigen::MatrixXd jacobian;
 
@@ -61,6 +63,8 @@ namespace bf
     {
         assert(noise.rows() == observations.rows());
         assert(noise.cols() == observations.rows());
+
+        sensorModel().setCalculateJacobian(true);
 
         // if there are no observations, simply return
         if(observations.cols() == 0)

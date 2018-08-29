@@ -187,6 +187,8 @@ namespace bf
         assert(particles_.front().state.size() == noise.rows());
         assert(particles_.front().state.size() == noise.cols());
 
+        motionModel().setCalculateJacobian(false);
+
         Eigen::VectorXd value;
         Eigen::MatrixXd jacobian;
         for(Particle &p : particles_)
@@ -202,6 +204,8 @@ namespace bf
         const Eigen::MatrixXd &observations, const Eigen::MatrixXd &sensorCov)
     {
         assert(sensorCov.size() > 0);
+
+        sensorModel().setCalculateJacobian(false);
 
         for(Particle &p : particles_)
         {

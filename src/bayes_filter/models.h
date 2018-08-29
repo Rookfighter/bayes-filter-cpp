@@ -17,6 +17,8 @@ namespace bf
     class MotionModel
     {
     private:
+        bool calcJacobian_;
+
         void computeFiniteDifferences(const Eigen::VectorXd &state,
             const Eigen::VectorXd &controls,
             const Eigen::MatrixXd &observations,
@@ -27,6 +29,9 @@ namespace bf
     public:
         MotionModel();
         virtual ~MotionModel();
+
+        void setCalculateJacobian(const bool calcJac);
+        bool calculateJacobian() const;
 
         /** Estimates a new state given the current state, controls,
          *  observations and time since last state.
@@ -53,6 +58,8 @@ namespace bf
     class SensorModel
     {
     private:
+        bool calcJacobian_;
+
         void computeFiniteDifferences(const Eigen::VectorXd &state,
             const Eigen::MatrixXd &observations,
             const Eigen::MatrixXd &value,
@@ -61,6 +68,9 @@ namespace bf
     public:
         SensorModel();
         virtual ~SensorModel();
+
+        void setCalculateJacobian(const bool calcJac);
+        bool calculateJacobian() const;
 
         /** Estimates observations given the current state,
          *  observations and absolute time of the system.

@@ -12,9 +12,20 @@
 namespace bf
 {
     MotionModel::MotionModel()
+        : calcJacobian_(true)
     {}
     MotionModel::~MotionModel()
     {}
+
+    void MotionModel::setCalculateJacobian(const bool calcJac)
+    {
+        calcJacobian_ = calcJac;
+    }
+
+    bool MotionModel::calculateJacobian() const
+    {
+        return calcJacobian_;
+    }
 
     void MotionModel::computeFiniteDifferences(const Eigen::VectorXd &state,
         const Eigen::VectorXd &controls,
@@ -55,7 +66,7 @@ namespace bf
 
         _estimateState(state, controls, observations, outValue,
             outJacobian);
-        if(outJacobian.size() == 0)
+        if(calcJacobian_ && outJacobian.size() == 0)
         {
             computeFiniteDifferences(state, controls, observations,
                 outValue, outJacobian, diff);
@@ -63,9 +74,20 @@ namespace bf
     }
 
     SensorModel::SensorModel()
+        : calcJacobian_(true)
     {}
     SensorModel::~SensorModel()
     {}
+
+    void SensorModel::setCalculateJacobian(const bool calcJac)
+    {
+        calcJacobian_ = calcJac;
+    }
+
+    bool SensorModel::calculateJacobian() const
+    {
+        return calcJacobian_;
+    }
 
     void SensorModel::computeFiniteDifferences(const Eigen::VectorXd &state,
         const Eigen::MatrixXd &observations,
@@ -102,7 +124,7 @@ namespace bf
         outJacobian.resize(0, 0);
 
         _estimateObservations(state, observations, outValue, outJacobian);
-        if(outJacobian.size() == 0)
+        if(calcJacobian_ && outJacobian.size() == 0)
         {
             computeFiniteDifferences(state, observations, outValue,
                 outJacobian, diff);
